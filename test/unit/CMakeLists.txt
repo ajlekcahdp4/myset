@@ -6,4 +6,5 @@ set (UNITT_SOURCES
 
 add_executable(unitt ${UNITT_SOURCES})
 target_include_directories(unitt PRIVATE ${MYSET_INCLUDE_DIR})
+target_link_libraries(unitt ${GTEST_BOTH_LIBRARIES})
 gtest_discover_tests (unitt)
