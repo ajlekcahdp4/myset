@@ -1,50 +1,87 @@
-#include "myset.hpp"
+#include "avl_tree.hpp"
 #include <gtest/gtest.h>
+#include <iostream>
 
-TEST (TestMySet, TestInint)
+TEST (Test_avl_tree_node_base_, Test_s_maximum_)
 {
-    my::set<int> set {};
-    ASSERT_EQ (set.size (), 0);
-    ASSERT_EQ (set.head (), nullptr);
+    auto head = new my::avl_tree_node_base_ {0};
+
+    head->m_left_            = new my::avl_tree_node_base_ {-1};
+    head->m_right_           = new my::avl_tree_node_base_ {1};
+    head->m_right_->m_right_ = new my::avl_tree_node_base_ {2};
+
+    auto max = my::avl_tree_node_base_::s_maximum_ (head);
+    ASSERT_EQ (max->m_height_diff_, 2);
 }
 
-TEST (TestMySet, TestInsertSize)
+TEST (Test_avl_tree_node_base_, Test_s_minimum_)
 {
-    my::set<int> set {};
-    std::vector<int> entries {1, 3, 2, 4};
-    size_t cnt {};
+    auto head = new my::avl_tree_node_base_ {0};
 
-    for ( auto &entry : entries )
-    {
-        set.insert (entry);
-        cnt++;
-        ASSERT_EQ (set.size (), cnt);
-    }
+    head->m_right_         = new my::avl_tree_node_base_ {1};
+    head->m_left_          = new my::avl_tree_node_base_ {-1};
+    head->m_left_->m_left_ = new my::avl_tree_node_base_ {-2};
+
+    auto max = my::avl_tree_node_base_::s_minimum_ (head);
+    ASSERT_EQ (max->m_height_diff_, -2);
 }
 
-TEST (TestIterator, TestDereference)
+TEST (Test_avl_tree_iterator_, TestCtorDeref)
 {
-    my::set<int>::avl_tree_node_t node (69);
-    my::set<int>::iterator it (&node);
+    auto head = new my::avl_tree_node_<int> (666);
 
-    ASSERT_EQ (*it, 69);
+    my::avl_tree_iterator_<int> pos (head);
+
+    ASSERT_EQ (*pos, 666);
 }
 
 struct entry
 {
     int a;
-    int b;
-
-    entry (int val1, int val2) : a (val1), b (val2) {}
 };
 
-TEST (TestIterator, TestPointer)
+TEST (Test_avl_tree_iterator_, TestArrowOperator)
 {
-    my::set<entry>::avl_tree_node_t node ({66, 25});
-    my::set<entry>::iterator it (&node);
+    entry b   = {9};
+    auto head = new my::avl_tree_node_<entry> (b);
 
-    ASSERT_EQ (it->a, 66);
-    ASSERT_EQ (it->b, 25);
+    my::avl_tree_iterator_<entry> pos (head);
+
+    ASSERT_EQ (pos->a, 9);
+}
+
+TEST (Test_avl_tree_iterator_, TestPostIncrement)
+{
+    auto head       = new my::avl_tree_node_<int> (0);
+    head->m_parent_ = head;
+
+    head->m_right_            = new my::avl_tree_node_<int> (1);
+    head->m_right_->m_parent_ = head;
+
+    my::avl_tree_iterator_<int> head_pos (head);
+
+    ASSERT_EQ (*head_pos, 0);
+
+    ASSERT_EQ (*(head_pos++), 0);
+
+    ASSERT_EQ (*head_pos, 1);
+}
+
+TEST (Test_avl_tree_iterator_, TestPreIncrement)
+{
+    auto head       = new my::avl_tree_node_<int> (0);
+    head->m_parent_ = head;
+
+    head->m_right_            = new my::avl_tree_node_<int> (1);
+    head->m_right_->m_parent_ = head;
+
+    my::avl_tree_iterator_<int> head_pos (head);
+
+    ASSERT_EQ (*head_pos, 0);
+
+    ASSERT_EQ (*(++head_pos), 1);
+
+    ASSERT_EQ (*head_pos, 1);
 }
 
 int main (int argc, char *argv[])
