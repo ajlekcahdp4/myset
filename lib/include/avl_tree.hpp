@@ -155,7 +155,10 @@ template <typename Tp_> struct avl_tree_iterator_
 
     explicit avl_tree_iterator_ (base_ptr_ x_) noexcept : m_node_ (x_) {}
 
-    reference operator* () const noexcept { return *static_cast<link_type_> (m_node_)->m_valptr_ (); }
+    reference operator* () const noexcept
+    {
+        return *static_cast<link_type_> (m_node_)->m_valptr_ ();
+    }
 
     pointer operator-> () const noexcept { return static_cast<link_type_> (m_node_)->m_valptr_ (); }
 
@@ -185,9 +188,15 @@ template <typename Tp_> struct avl_tree_iterator_
         return tmp_;
     }
 
-    friend bool operator== (const self_ &x_, const self_ &y_) noexcept { return x_.m_node_ == y_.m_node_; }
+    friend bool operator== (const self_ &x_, const self_ &y_) noexcept
+    {
+        return x_.m_node_ == y_.m_node_;
+    }
 
-    friend bool operator!= (const self_ &x_, const self_ &y_) noexcept { return x_.m_node_ != y_.m_node_; }
+    friend bool operator!= (const self_ &x_, const self_ &y_) noexcept
+    {
+        return x_.m_node_ != y_.m_node_;
+    }
 
     base_ptr_ m_node_;
 };
@@ -215,7 +224,10 @@ template <typename Tp_> struct avl_tree_const_iterator_
 
     iterator m_const_cast () const noexcept { return iterator (m_node_); }
 
-    reference operator* () const noexcept { return *static_cast<link_type_> (m_node_)->m_valptr_ (); }
+    reference operator* () const noexcept
+    {
+        return *static_cast<link_type_> (m_node_)->m_valptr_ ();
+    }
 
     pointer operator-> () const noexcept { return static_cast<link_type_> (m_node_)->m_valptr_ (); }
 
@@ -245,9 +257,15 @@ template <typename Tp_> struct avl_tree_const_iterator_
         return tmp_;
     }
 
-    friend bool operator== (const self_ &x_, const self_ &y_) noexcept { return x_.m_node_ == y_.m_node_; }
+    friend bool operator== (const self_ &x_, const self_ &y_) noexcept
+    {
+        return x_.m_node_ == y_.m_node_;
+    }
 
-    friend bool operator!= (const self_ &x_, const self_ &y_) noexcept { return x_.m_node_ != y_.m_node_; }
+    friend bool operator!= (const self_ &x_, const self_ &y_) noexcept
+    {
+        return x_.m_node_ != y_.m_node_;
+    }
 
     base_ptr_ m_node_;
 };
@@ -276,11 +294,15 @@ template <typename Key_, typename Compare_> class avl_tree_
     using difference_type = std::ptrdiff_t;
 
   private:
-    template <typename key_compare_> struct avl_tree_impl_ : public avl_tree_key_compare_, public avl_treee_header_
+    template <typename key_compare_>
+    struct avl_tree_impl_ : public avl_tree_key_compare_, public avl_treee_header_
     {
         using base_key_comapare_ = avl_tree_key_compare_<key_compare_>;
 
-        avl_tree_impl_ (const avl_tree_impl_ &x_) : base_key_compare_ (x_.m_key_compare_), avl_treee_header_ () {}
+        avl_tree_impl_ (const avl_tree_impl_ &x_)
+            : base_key_compare_ (x_.m_key_compare_), avl_treee_header_ ()
+        {
+        }
 
         avl_tree_impl_ (const key_compare_ &comp_) : base_key_comapare_ (comp_) {}
 
@@ -305,9 +327,15 @@ template <typename Key_, typename Compare_> class avl_tree_
 
     const_base_ptr_ m_rightmost_ () const noexcept { return m_impl_.m_header_.m_right_; }
 
-    link_type_ m_begin_ () const noexcept { return static_cast<link_type_> (m_impl_.m_header_.m_parent_); }
+    link_type_ m_begin_ () const noexcept
+    {
+        return static_cast<link_type_> (m_impl_.m_header_.m_parent_);
+    }
 
-    const_link_type_ m_begin_ () const noexcept { return static_cast<const_link_type_> (m_impl_.m_header_.m_parent_); }
+    const_link_type_ m_begin_ () const noexcept
+    {
+        return static_cast<const_link_type_> (m_impl_.m_header_.m_parent_);
+    }
 
     base_ptr_ m_end_ () noexcept { return &m_impl_.m_header_; }
 
@@ -315,29 +343,50 @@ template <typename Key_, typename Compare_> class avl_tree_
 
     static const Key_ &s_key_ (const_link_type_ x_) { return *x_->m_valptr_ (); }
 
-    static link_type_ s_left_ (base_ptr_ x_) noexcept { return static_cast<link_type_> (x_->m_left_); }
+    static link_type_ s_left_ (base_ptr_ x_) noexcept
+    {
+        return static_cast<link_type_> (x_->m_left_);
+    }
 
     static const_link_type_ s_left_ (const_base_ptr_ x_) noexcept
     {
         return static_cast<const_link_type_> (x_->m_left_);
     }
 
-    static link_type_ s_right_ (base_ptr_ x_) noexcept { return static_cast<link_type_> (x_->m_right_); }
+    static link_type_ s_right_ (base_ptr_ x_) noexcept
+    {
+        return static_cast<link_type_> (x_->m_right_);
+    }
 
     static const_link_type_ s_right_ (const_base_ptr_ x_) noexcept
     {
         return static_cast<const_link_type_> (x_->m_right_);
     }
 
-    static const Key_ &s_key_ (const_base_ptr_ x_) { return s_key_ (static_cast<const_link_type> (x_)); }
+    static const Key_ &s_key_ (const_base_ptr_ x_)
+    {
+        return s_key_ (static_cast<const_link_type> (x_));
+    }
 
-    static base_ptr_ s_minimum_ (base_ptr_ x_) noexcept { return avl_tree_node_base_::s_minimum_ (x_); }
+    static base_ptr_ s_minimum_ (base_ptr_ x_) noexcept
+    {
+        return avl_tree_node_base_::s_minimum_ (x_);
+    }
 
-    static const_base_ptr_ s_minimum_ (const_base_ptr_ x_) noexcept { return avl_tree_node_base_::s_minimum_ (x_); }
+    static const_base_ptr_ s_minimum_ (const_base_ptr_ x_) noexcept
+    {
+        return avl_tree_node_base_::s_minimum_ (x_);
+    }
 
-    static base_ptr_ s_minimum_ (base_ptr_ x_) noexcept { return avl_tree_node_base_::s_maximum_ (x_); }
+    static base_ptr_ s_minimum_ (base_ptr_ x_) noexcept
+    {
+        return avl_tree_node_base_::s_maximum_ (x_);
+    }
 
-    static const_base_ptr_ s_minimum_ (const_base_ptr_ x_) noexcept { return avl_tree_node_base_::s_maximum_ (x_); }
+    static const_base_ptr_ s_minimum_ (const_base_ptr_ x_) noexcept
+    {
+        return avl_tree_node_base_::s_maximum_ (x_);
+    }
 
   public:
     using iterator       = avl_tree_iterator_<value_type>;
@@ -350,9 +399,11 @@ template <typename Key_, typename Compare_> class avl_tree_
 
     std::pair<base_ptr_, base_ptr_> m_get_insert_equal_pos_ (const key_type &k_);
 
-    std::pair<base_ptr_, base_ptr_> m_get_insert_hint_unique_pos_ (const_iterator pos_, const key_type &k_);
+    std::pair<base_ptr_, base_ptr_> m_get_insert_hint_unique_pos_ (const_iterator pos_,
+                                                                   const key_type &k_);
 
-    std::pair<base_ptr_, base_ptr_> m_get_insert_hint_equal_pos_ (const_iterator pos_, const key_type &k_);
+    std::pair<base_ptr_, base_ptr_> m_get_insert_hint_equal_pos_ (const_iterator pos_,
+                                                                  const key_type &k_);
 
     iterator m_insert_node_ (base_ptr_ x_, base_ptr_ y_, link_type_ node_);
 
@@ -362,11 +413,13 @@ template <typename Key_, typename Compare_> class avl_tree_
 
     iterator m_lower_bound_ (link_type_ x_, base_ptr_ y_, const key_type &k_);
 
-    const_iterator m_lower_bound_ (const_link_type_ x_, const_base_ptr_ y_, const key_type &k_) const;
+    const_iterator m_lower_bound_ (const_link_type_ x_, const_base_ptr_ y_,
+                                   const key_type &k_) const;
 
     iterator m_upper_bound_ (link_type_ x_, base_ptr_ y_, const key_type &k_);
 
-    const_iterator m_upper_bound_ (const_link_type_ x_, const_base_ptr_ y_, const key_type &k_) const;
+    const_iterator m_upper_bound_ (const_link_type_ x_, const_base_ptr_ y_,
+                                   const key_type &k_) const;
 
   public:
     avl_tree_ (const Compare_ &comp_) : m_impl_ (comp_) {}
@@ -418,9 +471,11 @@ template <typename Key_, typename Compare_> class avl_tree_
 
     template <typename... Args_> iterator m_emplace_equal_ (Args_ &&...args_);
 
-    template <typename... Args_> iterator m_emplace_hint_unique_ (const_iterator pos_, Args_ &&...args_);
+    template <typename... Args_>
+    iterator m_emplace_hint_unique_ (const_iterator pos_, Args_ &&...args_);
 
-    template <typename... Args_> iterator m_emplace_hint_equal_ (const_iterator pos_, Args_ &&...args_);
+    template <typename... Args_>
+    iterator m_emplace_hint_equal_ (const_iterator pos_, Args_ &&...args_);
 
     m_insert_range_unique_ (iterator first_, iterator last_)
     {
@@ -471,11 +526,17 @@ template <typename Key_, typename Compare_> class avl_tree_
 
     iterator lower_bound (const key_type &k_) { return m_lower_bound_ (m_begin_ (), m_end (), k_); }
 
-    const_iterator lower_bound (const key_type &k_) const { return m_lower_bound_ (m_begin_ (), m_end (), k_); }
+    const_iterator lower_bound (const key_type &k_) const
+    {
+        return m_lower_bound_ (m_begin_ (), m_end (), k_);
+    }
 
     iterator upper_bound (const key_type &k_) { return m_upper_bound_ (m_begin_ (), m_end (), k_); }
 
-    const_iterator upper_bound (const key_type &k_) const { return m_upper_bound_ (m_begin_ (), m_end (), k_); }
+    const_iterator upper_bound (const key_type &k_) const
+    {
+        return m_upper_bound_ (m_begin_ (), m_end (), k_);
+    }
 
     std::pair<iterator, iterator> equal_range (const key_type &k_);
 
