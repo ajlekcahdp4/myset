@@ -73,6 +73,11 @@ template <typename key_compare_> struct avl_tree_key_compare_
     avl_tree_key_compare_ (const key_compare_ &comp_) : m_key_compare_ (comp_) {}
 
     avl_tree_key_compare_ (avl_tree_key_compare_ &&x_) : m_key_compare_ (x_.m_key_compare_) {}
+
+    template <typename Key_> bool operator() (const Key_ &k1_, const Key_ &k2_)
+    {
+        return m_key_compare_ (k1_, k2_);
+    }
 };
 
 // Helper type to manage deafault initialization of node count and header.
@@ -279,9 +284,9 @@ avl_tree_node_base_ *avl_tree_rebalance_for_erase (avl_tree_node_base_ *const er
 template <typename Key_, typename Compare_> class avl_tree_
 {
     using base_ptr_        = avl_tree_node_base_ *;
-    using const_based_ptr_ = const avl_tree_node_base_ *;
+    using const_base_ptr_  = const avl_tree_node_base_ *;
     using link_type_       = avl_tree_node_<Val_> *;
-    using const_link_type  = const avl_tree_node_<Val_> *;
+    using const_link_type_ = const avl_tree_node_<Val_> *;
 
   public:
     using key_type        = Key_;
@@ -365,7 +370,7 @@ template <typename Key_, typename Compare_> class avl_tree_
 
     static const Key_ &s_key_ (const_base_ptr_ x_)
     {
-        return s_key_ (static_cast<const_link_type> (x_));
+        return s_key_ (static_cast<const_link_type_> (x_));
     }
 
     static base_ptr_ s_minimum_ (base_ptr_ x_) noexcept
@@ -433,7 +438,7 @@ template <typename Key_, typename Compare_> class avl_tree_
     avl_tree_ &operator= (const avl_tree_ &tree_);
 
     // Accessors.
-    Compare_ key_comp () const { return m_impl_.m_key_compare; }
+    Compare_ key_comp () const { return m_impl_.avl_tree_key_compare_ (); }
 
     iterator begin () noexcept { return iterator (m_impl_.m_header_.m_left_;); }
 
@@ -542,9 +547,51 @@ template <typename Key_, typename Compare_> class avl_tree_
 
     std::pair<const_iterator, const_iterator> equal_range (const key_type &k_) const;
 
-    const key_type closest_left (const key_type &k_);
+    const key_type closest_left (const key_type &k_)
+    {
+        base_ptr_ curr_  = m_impl_.m_header_;
+        base_ptr_ bound_ = nullptr;
 
-    const key_type closest_right (const key_type &k_);
+        while ( curr_ )
+        {
+            bool key_less = m_impl_.avl_tree_key_compare (k_, s_key_ (curr_));
+            if ( !key_less )
+            {
+                bound_ = curr_;
+                curr_  = curr_->m_right_;
+            }
+            else
+                curr_ = curr_->m_left_;
+        }
+
+        if ( !bound_ )
+            throw std::out_of_range ("Leftmost element has no predeccessor");
+        return s_key_ (bound_);
+    }
+
+    const key_type closest_right (const key_type &k_)
+    {
+        base_ptr_ curr_  = m_impl_.m_header_;
+        base_ptr_ bound_ = nullptr;
+
+        while ( curr_ )
+        {
+            bool key_less = m_impl_.avl_tree_key_compare (k_, s_key_ (curr_));
+            if ( !key_less )
+            {
+                curr_ = curr_->m_right_;
+            }
+            else
+            {
+                bound_ = curr_;
+                curr_  = curr_->m_left_;
+            }
+        }
+
+        if ( !bound_ )
+            throw std::out_of_range ("Rightmost element has no successor");
+        return s_key_ (bound_);
+    }
 
   private:
     // Move elements from container.

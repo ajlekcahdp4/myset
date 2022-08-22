@@ -35,7 +35,10 @@ avl_tree_node_base_ *avl_tree_increment_impl_ (avl_tree_node_base_ *x_) noexcept
     return x_;
 }
 
-avl_tree_node_base_ *avl_tree_increment_ (avl_tree_node_base_ *x_) noexcept { return avl_tree_increment_impl_ (x_); }
+avl_tree_node_base_ *avl_tree_increment_ (avl_tree_node_base_ *x_) noexcept
+{
+    return avl_tree_increment_impl_ (x_);
+}
 
 const avl_tree_node_base_ *avl_tree_increment_ (const avl_tree_node_base_ *x_) noexcept
 {
@@ -68,11 +71,88 @@ avl_tree_node_base_ *avl_tree_decrement_impl_ (avl_tree_node_base_ *x_) noexcept
     return x_;
 }
 
-avl_tree_node_base_ *avl_tree_decrement_ (avl_tree_node_base_ *x_) noexcept { return avl_tree_decrement_impl_ (x_); }
+avl_tree_node_base_ *avl_tree_decrement_ (avl_tree_node_base_ *x_) noexcept
+{
+    return avl_tree_decrement_impl_ (x_);
+}
 
 const avl_tree_node_base_ *avl_tree_decrement_ (const avl_tree_node_base_ *x_) noexcept
 {
     return avl_tree_decrement_impl_ (const_cast<avl_tree_node_base_ *> (x_));
+}
+
+template <typename Key_, typename Comp_>
+typename avl_tree_<Key_, Comp_>::iterator
+avl_tree_<Key_, Comp_>::m_lower_bound_ (link_type_ x_, base_ptr_ y_, const key_type &k_)
+{
+    while ( x_ )
+    {
+        bool key_bigger_ = avl_tree_key_compare_ (s_key_ (x_), k_);
+        if ( !key_bigger_ )
+        {
+            y_ = x_;
+            x_ = s_left_ (x_);
+        }
+        else
+            x_ = s_right_ (x_);
+    }
+    return iterator (y_);
+}
+
+template <typename Key_, typename Comp_>
+typename avl_tree_<Key_, Comp_>::const_iterator
+avl_tree_<Key_, Comp_>::m_lower_bound_ (const_link_type_ x_, const_base_ptr_ y_,
+                                        const key_type &k_) const
+{
+    while ( x_ )
+    {
+        bool key_bigger_ = avl_tree_key_compare_ (s_key_ (x_), k_);
+        if ( !key_bigger_ )
+        {
+            y_ = x_;
+            x_ = s_left_ (x_);
+        }
+        else
+            x_ = s_right_ (x_);
+    }
+    return const_iterator (y_);
+}
+
+template <typename Key_, typename Comp_>
+typename avl_tree_<Key_, Comp_>::iterator
+avl_tree_<Key_, Comp_>::m_upper_bound_ (link_type_ x_, base_ptr_ y_, const key_type &k_)
+{
+    while ( x_ )
+    {
+        bool key_less_ = avl_tree_key_compare_ (k_, s_key_ (x_));
+        if ( key_less_ )
+        {
+            y_ = x_;
+            x_ = s_left_ (x_);
+        }
+        else
+            x_ = s_right_ (x_);
+    }
+    return iterator (y_);
+}
+
+template <typename Key_, typename Comp_>
+typename avl_tree_<Key_, Comp_>::const_iterator
+avl_tree_<Key_, Comp_>::m_upper_bound_ (const_link_type_ x_, const_base_ptr_ y_,
+                                        const key_type &k_) const
+{
+    while ( x_ )
+    {
+        bool key_less_ = avl_tree_key_compare_ (k_, s_key_ (x_));
+        if ( key_less_ )
+        {
+            y_ = x_;
+            x_ = s_left_ (x_);
+        }
+        else
+            x_ = s_right_ (x_);
+    }
+    return const_iterator (y_);
 }
 
 }   // namespace my
