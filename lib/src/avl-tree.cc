@@ -82,6 +82,37 @@ const avl_tree_node_base_ *avl_tree_decrement_ (const avl_tree_node_base_ *x_) n
 }
 
 template <typename Key_, typename Comp_>
+template <typename F>
+typename std::tuple<avl_tree_node_base_ *, avl_tree_node_base_ *, bool>
+avl_tree_<Key_, Comp_>::m_trav_bin_search (key_type key_, F step_)
+{
+    using res_      = std::tuple<avl_tree_node_base_ *, avl_tree_node_base_ *, bool>;
+    using base_ptr_ = avl_tree_node_base_ *;
+
+    base_ptr_ curr_ = m_header_;
+    base_ptr_ prev_ = nullptr;
+
+    if ( !curr_ )
+        return res_ (nullptr, nullptr, false);
+
+    bool key_less_ {};
+
+    while ( curr_ && s_key_ (curr_) == key_ )
+    {
+        key_less_ = avl_tree_key_compare_ (key_, s_key_ (curr_));
+        step_ (curr_);
+        prev_ = curr_;
+        if ( key_less_ )
+            curr_ = s_left_ (curr_);
+        else
+            curr_ = s_right_ (curr_);
+    }
+
+    return res_ (curr_, prev_, key_less_);
+}
+
+// Accessors.
+template <typename Key_, typename Comp_>
 typename avl_tree_<Key_, Comp_>::iterator
 avl_tree_<Key_, Comp_>::m_lower_bound_ (link_type_ x_, base_ptr_ y_, const key_type &k_)
 {
@@ -153,6 +184,55 @@ avl_tree_<Key_, Comp_>::m_upper_bound_ (const_link_type_ x_, const_base_ptr_ y_,
             x_ = s_right_ (x_);
     }
     return const_iterator (y_);
+}
+
+// Insert/Erase.
+
+template <typename Key_, typename Comp_>
+typename avl_tree_<Key_, Comp_>::iterator avl_tree_<Key_, Comp_>::m_insert_ (const key_type &key_)
+{
+    auto to_insert_ = new avl_tree_node_<Key_> (key_);
+
+    auto res = m_insert_node_ (to_insert_);
+    m_rebalance_after_insert_ (to_insert_);
+    return res;
+}
+
+template <typename Key_, typename Comp_>
+avl_tree_node_base_ *avl_tree_<Key_, Comp_>::m_insert_node_ (link_type_ to_insert_)
+{
+    if ( empty () )
+    {
+        avl_tree_header_::m_header_     = to_insert_;
+        avl_tree_header_::m_node_count_ = 1;
+        return iterator (to_insert_);
+    }
+
+    auto res          = m_trav_bin_search (s_key_ (to_insert_), [] (base_ptr_ &node_) {});
+    auto found        = std::get<0> (res);
+    auto prev         = std::get<1> (res);
+    auto prev_greater = std::get<2> (res);
+
+    if ( found )
+    {
+        delete to_insert_;
+        throw std::out_of_range ("Element already inserted");
+    }
+
+    to_insert_->m_parent_ = prev;
+
+    if ( prev_greater )
+        prev->m_left_ = to_insert_;
+    else
+        prev->m_right_ = to_insert_;
+
+    return to_insert_;
+}
+
+template <typename Key_, typename Comp_>
+avl_tree_node_base_ *
+avl_tree_<Key_, Comp_>::m_rebalance_after_insert_ (base_ptr_ inserted_) noexcept
+{
 }
 
 }   // namespace my

@@ -15,6 +15,7 @@
 #include <iostream>
 #include <iterator>
 #include <memory>
+#include <tuple>
 #include <utility>
 
 namespace my
@@ -81,42 +82,42 @@ template <typename key_compare_> struct avl_tree_key_compare_
 };
 
 // Helper type to manage deafault initialization of node count and header.
-struct avl_treee_header_
+struct avl_tree_header_
 {
-    avl_tree_node_base_ m_header_;
-    std::size_t m_node_count_ = 0;   // keeps track of size of tree
+    avl_tree_node_base_ *m_header_ = nullptr;
+    std::size_t m_node_count_      = 0;   // keeps track of size of tree
 
-    avl_treee_header_ () noexcept { m_reset_ (); }
+    avl_tree_header_ () noexcept { m_reset_ (); }
 
-    avl_treee_header_ (avl_treee_header_ &&x_) noexcept
+    avl_tree_header_ (avl_tree_header_ &&x_) noexcept
     {
-        if ( x_.m_header_.m_parent_ != nullptr )
+        if ( x_.m_header_->m_parent_ != nullptr )
             m_move_data_ (x_);
         else
         {
-            m_header_.m_height_diff_ = 0;
+            m_header_->m_height_diff_ = 0;
             m_reset_ ();
         }
     }
 
-    void m_move_data_ (avl_treee_header_ &from_) noexcept
+    void m_move_data_ (avl_tree_header_ &from_) noexcept
     {
-        m_header_.m_height_diff_       = from_.m_header_.m_height_diff_;
-        m_header_.m_parent_            = from_.m_header_.m_parent_;
-        m_header_.m_left_              = from_.m_header_.m_left_;
-        m_header_.m_right_             = from_.m_header_.m_right_;
-        m_header_.m_parent_->m_parent_ = &m_header_;
-        m_node_count_                  = from_.m_node_count_;
+        m_header_->m_height_diff_       = from_.m_header_->m_height_diff_;
+        m_header_->m_parent_            = from_.m_header_->m_parent_;
+        m_header_->m_left_              = from_.m_header_->m_left_;
+        m_header_->m_right_             = from_.m_header_->m_right_;
+        m_header_->m_parent_->m_parent_ = m_header_;
+        m_node_count_                   = from_.m_node_count_;
 
         from_.m_reset_ ();
     }
 
     void m_reset_ () noexcept
     {
-        m_header_.m_parent_ = nullptr;
-        m_header_.m_left_   = nullptr;
-        m_header_.m_right_  = nullptr;
-        m_node_count_       = 0;
+        m_header_->m_parent_ = nullptr;
+        m_header_->m_left_   = nullptr;
+        m_header_->m_right_  = nullptr;
+        m_node_count_        = 0;
     }
 };
 
@@ -275,9 +276,6 @@ template <typename Tp_> struct avl_tree_const_iterator_
     base_ptr_ m_node_;
 };
 
-void avl_tree_insert_and_rebalance_ (avl_tree_node_base_ *x_, avl_tree_node_base_ *y_,
-                                     avl_tree_node_base_ &header_) noexcept;
-
 avl_tree_node_base_ *avl_tree_rebalance_for_erase (avl_tree_node_base_ *const erased_,
                                                    avl_tree_node_base_ &header_) noexcept;
 
@@ -320,78 +318,51 @@ template <typename Key_, typename Compare_> class avl_tree_
     avl_tree_impl_<Compare_> m_impl_;
 
   private:
-    base_ptr_ &m_root_ () noexcept { return m_impl_.m_header_.m_parent_; }
+    base_ptr_ &m_root_ () noexcept { return m_impl_.m_header_->m_parent_; }
 
-    const_base_ptr_ m_root_ () const noexcept { return m_impl_.m_header_.m_parent_; }
+    const_base_ptr_ m_root_ () const noexcept { return m_impl_.m_header_->m_parent_; }
 
-    base_ptr_ &m_leftmost_ () noexcept { return m_impl_.m_header_.m_left_; }
+    base_ptr_ &m_leftmost_ () noexcept { return m_impl_.m_header_->m_left_; }
 
-    const_base_ptr_ m_leftmost_ () const noexcept { return m_impl_.m_header_.m_left_; }
+    const_base_ptr_ m_leftmost_ () const noexcept { return m_impl_.m_header_->m_left_; }
 
-    base_ptr_ &m_rightmost_ () noexcept { return m_impl_.m_header_.m_right_; }
+    base_ptr_ &m_rightmost_ () noexcept { return m_impl_.m_header_->m_right_; }
 
-    const_base_ptr_ m_rightmost_ () const noexcept { return m_impl_.m_header_.m_right_; }
+    const_base_ptr_ m_rightmost_ () const noexcept { return m_impl_.m_header_->m_right_; }
 
     link_type_ m_begin_ () const noexcept
     {
-        return static_cast<link_type_> (m_impl_.m_header_.m_parent_);
+        return static_cast<link_type_> (m_impl_.m_header_->m_parent_);
     }
 
     const_link_type_ m_begin_ () const noexcept
     {
-        return static_cast<const_link_type_> (m_impl_.m_header_.m_parent_);
+        return static_cast<const_link_type_> (m_impl_.m_header_->m_parent_);
     }
 
     base_ptr_ m_end_ () noexcept { return &m_impl_.m_header_; }
 
     const_base_ptr_ m_end_ () const noexcept { return &m_impl_.m_header_; }
 
-    static const Key_ &s_key_ (const_link_type_ x_) { return *x_->m_valptr_ (); }
+    const Key_ &s_key_ () { m_valptr_ (); }
 
-    static link_type_ s_left_ (base_ptr_ x_) noexcept
-    {
-        return static_cast<link_type_> (x_->m_left_);
-    }
+    link_type_ s_left_ () noexcept { return static_cast<link_type_> (m_left_); }
 
-    static const_link_type_ s_left_ (const_base_ptr_ x_) noexcept
-    {
-        return static_cast<const_link_type_> (x_->m_left_);
-    }
+    const_link_type_ s_left_ () noexcept { return static_cast<const_link_type_> (m_left_); }
 
-    static link_type_ s_right_ (base_ptr_ x_) noexcept
-    {
-        return static_cast<link_type_> (x_->m_right_);
-    }
+    link_type_ s_right_ () noexcept { return static_cast<link_type_> (m_right_); }
 
-    static const_link_type_ s_right_ (const_base_ptr_ x_) noexcept
-    {
-        return static_cast<const_link_type_> (x_->m_right_);
-    }
+    const_link_type_ s_right_ () noexcept { return static_cast<const_link_type_> (m_right_); }
 
-    static const Key_ &s_key_ (const_base_ptr_ x_)
-    {
-        return s_key_ (static_cast<const_link_type_> (x_));
-    }
+    const Key_ &s_key_ () { return s_key_ (static_cast<const_link_type_> (this)); }
 
-    static base_ptr_ s_minimum_ (base_ptr_ x_) noexcept
-    {
-        return avl_tree_node_base_::s_minimum_ (x_);
-    }
+    base_ptr_ s_minimum_ () noexcept { return avl_tree_node_base_::s_minimum_ (this); }
 
-    static const_base_ptr_ s_minimum_ (const_base_ptr_ x_) noexcept
-    {
-        return avl_tree_node_base_::s_minimum_ (x_);
-    }
+    const_base_ptr_ s_minimum_ () noexcept { return avl_tree_node_base_::s_minimum_ (this); }
 
-    static base_ptr_ s_minimum_ (base_ptr_ x_) noexcept
-    {
-        return avl_tree_node_base_::s_maximum_ (x_);
-    }
+    base_ptr_ s_minimum_ () noexcept { return avl_tree_node_base_::s_maximum_ (this); }
 
-    static const_base_ptr_ s_minimum_ (const_base_ptr_ x_) noexcept
-    {
-        return avl_tree_node_base_::s_maximum_ (x_);
-    }
+    const_base_ptr_ s_minimum_ () noexcept { return avl_tree_node_base_::s_maximum_ (this); }
 
   public:
     using iterator       = avl_tree_iterator_<value_type>;
@@ -410,7 +381,14 @@ template <typename Key_, typename Compare_> class avl_tree_
     std::pair<base_ptr_, base_ptr_> m_get_insert_hint_equal_pos_ (const_iterator pos_,
                                                                   const key_type &k_);
 
-    iterator m_insert_node_ (base_ptr_ x_, base_ptr_ y_, link_type_ node_);
+    template <typename F>
+    std::tuple<base_ptr_, base_ptr_, bool> m_trav_bin_search (key_type key_, F step_);
+
+    // Insert node in AVL tree without rebalancing.
+    base_ptr_ m_insert_node_ (link_type_ node_);
+
+    // Rebalance subtree after insert.
+    base_ptr_ m_rebalance_after_insert_ (base_ptr_ leaf_);
 
     link_type_ m_copy_ (const avl_tree_ &tree_);
 
@@ -440,9 +418,9 @@ template <typename Key_, typename Compare_> class avl_tree_
     // Accessors.
     Compare_ key_comp () const { return m_impl_.avl_tree_key_compare_ (); }
 
-    iterator begin () noexcept { return iterator (m_impl_.m_header_.m_left_;); }
+    iterator begin () noexcept { return iterator (m_impl_.m_header_->m_left_;); }
 
-    const_iterator begin () const noexcept { return const_iterator (m_impl_.m_header_.m_left_); }
+    const_iterator begin () const noexcept { return const_iterator (m_impl_.m_header_->m_left_); }
 
     iterator end () noexcept { return iterator (m_impl_.m_header_); }
 
@@ -464,35 +442,8 @@ template <typename Key_, typename Compare_> class avl_tree_
 
     // Insert/erase.
 
-    template <typename Arg_> std::pair<iterator, bool> m_insert_unique_ (Arg_ &&x_);
-
-    template <typename Arg_> iterator m_insert_equal_ (Arg_ &&x_);
-
-    template <typename Arg_> iterator m_insert_unique_ (const_iterator pos_, Arg_ &&x_);
-
-    template <typename Arg_> iterator m_insert_equal_ (const_iterator pos_, Arg_ &&x_);
-
-    template <typename... Args_> std::pair<iterator, bool> m_emplace_unique_ (Args_ &&...args_);
-
-    template <typename... Args_> iterator m_emplace_equal_ (Args_ &&...args_);
-
-    template <typename... Args_>
-    iterator m_emplace_hint_unique_ (const_iterator pos_, Args_ &&...args_);
-
-    template <typename... Args_>
-    iterator m_emplace_hint_equal_ (const_iterator pos_, Args_ &&...args_);
-
-    m_insert_range_unique_ (iterator first_, iterator last_)
-    {
-        for ( ; first_ != last_; ++first_ )
-            m_emplace_unique_ (*first_);
-    }
-
-    m_insert_range_equal_ (iterator first_, iterator last_)
-    {
-        for ( ; first_ != last_; ++first_ )
-            m_emplace_equal_ (*first_);
-    }
+    // create node, insert and rebalance tree
+    iterator m_insert_ (const key_type &key_);
 
   private:
     void m_erase_aux_ (const_iterator pos_);
@@ -542,10 +493,6 @@ template <typename Key_, typename Compare_> class avl_tree_
     {
         return m_upper_bound_ (m_begin_ (), m_end (), k_);
     }
-
-    std::pair<iterator, iterator> equal_range (const key_type &k_);
-
-    std::pair<const_iterator, const_iterator> equal_range (const key_type &k_) const;
 
     const key_type closest_left (const key_type &k_)
     {
