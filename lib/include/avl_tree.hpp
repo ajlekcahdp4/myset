@@ -24,14 +24,14 @@ namespace my
 //===============================avl_tree_node_base===============================
 struct avl_tree_node_base_
 {
-    using height_diff_t   = int;
+    using height_t        = int;
     using base_ptr_       = avl_tree_node_base_ *;
     using const_base_ptr_ = const avl_tree_node_base_ *;
 
-    height_diff_t m_height_diff_ = 0;
-    base_ptr_ m_parent_          = nullptr;
-    base_ptr_ m_left_            = nullptr;
-    base_ptr_ m_right_           = nullptr;
+    height_t m_height_  = 0;
+    base_ptr_ m_parent_ = nullptr;
+    base_ptr_ m_left_   = nullptr;
+    base_ptr_ m_right_  = nullptr;
 
     base_ptr_ s_minimum_ () noexcept
     {
@@ -95,14 +95,14 @@ struct avl_tree_header_
             m_move_data_ (x_);
         else
         {
-            m_header_->m_height_diff_ = 0;
+            m_header_->m_height_ = 0;
             m_reset_ ();
         }
     }
 
     void m_move_data_ (avl_tree_header_ &from_) noexcept
     {
-        m_header_->m_height_diff_       = from_.m_header_->m_height_diff_;
+        m_header_->m_height_            = from_.m_header_->m_height_;
         m_header_->m_parent_            = from_.m_header_->m_parent_;
         m_header_->m_left_              = from_.m_header_->m_left_;
         m_header_->m_right_             = from_.m_header_->m_right_;
