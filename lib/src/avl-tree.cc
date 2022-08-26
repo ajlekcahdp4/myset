@@ -239,7 +239,7 @@ template <typename Key_, typename Comp_> void avl_tree_<Key_, Comp_>::rotate_lef
 
     rchild_->m_parent_ = node_->m_parent_;
 
-    if ( node_->m_parent_ == node_->m_parent_ )   // case root
+    if ( node_->m_parent_ == node_ )   // case root
         this->m_impl_.m_header_ = rchild_;
     else if ( node_ == node_->m_parent_->m_left_ )
         node_->m_parent_->m_left_ = rchild_;
