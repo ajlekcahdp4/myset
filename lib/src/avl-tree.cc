@@ -229,6 +229,47 @@ avl_tree_node_base_ *avl_tree_<Key_, Comp_>::m_insert_node_ (link_type_ to_inser
     return to_insert_;
 }
 
+template <typename Key_, typename Comp_> void avl_tree_<Key_, Comp_>::rotate_left_ (base_ptr_ node_)
+{
+    base_ptr_ rchild_ = node_->m_right_;
+    node_->m_right_   = rchild_->m_left_;
+
+    if ( rchild_->m_left_ )
+        rchild_->m_left_->m_parent_ = node_;
+
+    rchild_->m_parent_ = node_->m_parent_;
+
+    if ( node_->m_parent_ == node_->m_parent_ )   // case root
+        this->m_impl_.m_header_ = rchild_;
+    else if ( node_ == node_->m_parent_->m_left_ )
+        node_->m_parent_->m_left_ = rchild_;
+    else
+        node_->m_parent_->m_right_ = rchild_;
+    rchild_->m_left_ = node_;
+    node_->m_parent_ = rchild_;
+}
+
+template <typename Key_, typename Comp_>
+void avl_tree_<Key_, Comp_>::rotate_right_ (base_ptr_ node_)
+{
+    base_ptr_ lchild_ = node_->m_left_;
+    node_->m_left_    = rchild_->m_light_;
+
+    if ( lchild_->m_right_ )
+        lchild_->m_right_->m_parent_ = node_;
+
+    lchild_->m_parent_ = node_->m_parent_;
+
+    if ( node_->m_parent_ == node_ )   // case root
+        this->m_impl_.m_header_ = lchild_;
+    else if ( node_ == node_->m_parent_->m_right_ )
+        node_->m_parent_->m_right_ = lchild_;
+    else
+        node_->m_parent_->m_left_ = lchild_;
+    lchild_->m_right_ = node_;
+    node_->m_parent_  = lchild_;
+}
+
 template <typename Key_, typename Comp_>
 avl_tree_node_base_ *
 avl_tree_<Key_, Comp_>::m_rebalance_after_insert_ (base_ptr_ inserted_) noexcept

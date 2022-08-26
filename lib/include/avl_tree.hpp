@@ -390,6 +390,9 @@ template <typename Key_, typename Compare_> class avl_tree_
     // Rebalance subtree after insert.
     base_ptr_ m_rebalance_after_insert_ (base_ptr_ leaf_);
 
+    void rotate_left_ (base_ptr_ node_);
+    void rotate_right_ (base_ptr_ node_);
+
     link_type_ m_copy_ (const avl_tree_ &tree_);
 
     void m_erase_ (link_type_ x_);
