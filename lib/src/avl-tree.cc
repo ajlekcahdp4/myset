@@ -271,6 +271,15 @@ void avl_tree_<Key_, Comp_>::rotate_right_ (base_ptr_ node_)
 }
 
 template <typename Key_, typename Comp_>
+void avl_tree_<Key_, Comp_>::rotate_with_parent_ (base_ptr_ node_)
+{
+    if ( node_->is_left_child_ () )
+        rotate_right_ (node_->m_parent_);
+    else
+        rotate_left_ (node_->m_parent_);
+}
+
+template <typename Key_, typename Comp_>
 avl_tree_node_base_ *
 avl_tree_<Key_, Comp_>::m_rebalance_after_insert_ (base_ptr_ inserted_) noexcept
 {

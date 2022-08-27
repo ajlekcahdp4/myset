@@ -62,6 +62,9 @@ struct avl_tree_node_base_
             return m_right_->s_minimum_ ();
         return nullptr;
     }
+
+    bool is_left_child_ () { return this == m_parent_->m_left_; }
+    bool is_right_child_ () { return this == m_parent_->m_right_; }
 };
 
 // Helper type offering value initialization guarantee on the compare functor.
@@ -123,7 +126,7 @@ struct avl_tree_header_
 
 template <typename val_> struct avl_tree_node_ : public avl_tree_node_base_
 {
-    using link_type = avl_tree_node_<val_> *;
+    using link_type_ = avl_tree_node_<val_> *;
 
     avl_tree_node_ () {}
 
@@ -133,7 +136,11 @@ template <typename val_> struct avl_tree_node_ : public avl_tree_node_base_
 
     val_ *m_valptr_ () { return &m_val_; }
 
-    const val_ *m_valptr_ () const { return &m_val_; }
+    const val_ &s_key_ () { m_valptr_ (); }
+
+    link_type_ s_left_ () noexcept { return static_cast<link_type_> (m_left_); }
+
+    link_type_ s_right_ () noexcept { return static_cast<link_type_> (m_right_); }
 };
 
 avl_tree_node_base_ *avl_tree_increment_ (avl_tree_node_base_ *x_) noexcept;
@@ -218,7 +225,7 @@ template <typename Tp_> struct avl_tree_const_iterator_
     using iterator_category = std::bidirectional_iterator_tag;
     using difference_type   = std::ptrdiff_t;
     using self_             = avl_tree_const_iterator_<Tp_>;
-    using base_ptr_         = avl_tree_node_base_::const_base_ptr;
+    using base_ptr_         = avl_tree_node_base_::const_base_ptr_;
     using link_type_        = avl_tree_node_<Tp_> *;
     using const_link_type_  = const avl_tree_node_<Tp_> *;
 
@@ -279,12 +286,12 @@ template <typename Tp_> struct avl_tree_const_iterator_
 avl_tree_node_base_ *avl_tree_rebalance_for_erase (avl_tree_node_base_ *const erased_,
                                                    avl_tree_node_base_ &header_) noexcept;
 
-template <typename Key_, typename Compare_> class avl_tree_
+template <typename Key_, typename Compare_> struct avl_tree_
 {
     using base_ptr_        = avl_tree_node_base_ *;
     using const_base_ptr_  = const avl_tree_node_base_ *;
-    using link_type_       = avl_tree_node_<Val_> *;
-    using const_link_type_ = const avl_tree_node_<Val_> *;
+    using link_type_       = avl_tree_node_<Key_> *;
+    using const_link_type_ = const avl_tree_node_<Key_> *;
 
   public:
     using key_type        = Key_;
@@ -296,21 +303,21 @@ template <typename Key_, typename Compare_> class avl_tree_
     using size_type       = std::size_t;
     using difference_type = std::ptrdiff_t;
 
-  private:
+  public:
     template <typename key_compare_>
-    struct avl_tree_impl_ : public avl_tree_key_compare_, public avl_treee_header_
+    struct avl_tree_impl_ : public avl_tree_key_compare_<key_compare_>, public avl_treee_header_
     {
-        using base_key_comapare_ = avl_tree_key_compare_<key_compare_>;
+        using base_key_compare_ = avl_tree_key_compare_<key_compare_>;
 
         avl_tree_impl_ (const avl_tree_impl_ &x_)
-            : base_key_compare_ (x_.m_key_compare_), avl_treee_header_ ()
+            : base_key_compare_ (x_.m_key_compare_), avl_tree_header_ ()
         {
         }
 
-        avl_tree_impl_ (const key_compare_ &comp_) : base_key_comapare_ (comp_) {}
+        avl_tree_impl_ (const key_compare_ &comp_) : base_key_compare_ (comp_) {}
 
         avl_tree_impl_ (avl_tree_impl_ &&x_) noexcept
-            : base_key_comapare_ (std::move (x_)), avl_treee_header_ (std::move (x_))
+            : base_key_compare_ (std::move (x_)), avl_tree_header_ (std::move (x_))
         {
         }
     };
@@ -330,7 +337,7 @@ template <typename Key_, typename Compare_> class avl_tree_
 
     const_base_ptr_ m_rightmost_ () const noexcept { return m_impl_.m_header_->m_right_; }
 
-    link_type_ m_begin_ () const noexcept
+    link_type_ m_begin_ () noexcept
     {
         return static_cast<link_type_> (m_impl_.m_header_->m_parent_);
     }
@@ -344,25 +351,9 @@ template <typename Key_, typename Compare_> class avl_tree_
 
     const_base_ptr_ m_end_ () const noexcept { return &m_impl_.m_header_; }
 
-    const Key_ &s_key_ () { m_valptr_ (); }
-
-    link_type_ s_left_ () noexcept { return static_cast<link_type_> (m_left_); }
-
-    const_link_type_ s_left_ () noexcept { return static_cast<const_link_type_> (m_left_); }
-
-    link_type_ s_right_ () noexcept { return static_cast<link_type_> (m_right_); }
-
-    const_link_type_ s_right_ () noexcept { return static_cast<const_link_type_> (m_right_); }
-
-    const Key_ &s_key_ () { return s_key_ (static_cast<const_link_type_> (this)); }
-
     base_ptr_ s_minimum_ () noexcept { return avl_tree_node_base_::s_minimum_ (this); }
 
-    const_base_ptr_ s_minimum_ () noexcept { return avl_tree_node_base_::s_minimum_ (this); }
-
-    base_ptr_ s_minimum_ () noexcept { return avl_tree_node_base_::s_maximum_ (this); }
-
-    const_base_ptr_ s_minimum_ () noexcept { return avl_tree_node_base_::s_maximum_ (this); }
+    base_ptr_ s_maximum_ () noexcept { return avl_tree_node_base_::s_maximum_ (this); }
 
   public:
     using iterator       = avl_tree_iterator_<value_type>;
@@ -392,6 +383,7 @@ template <typename Key_, typename Compare_> class avl_tree_
 
     void rotate_left_ (base_ptr_ node_);
     void rotate_right_ (base_ptr_ node_);
+    void rotate_with_parent_ (base_ptr_ node_);
 
     link_type_ m_copy_ (const avl_tree_ &tree_);
 
@@ -414,14 +406,14 @@ template <typename Key_, typename Compare_> class avl_tree_
 
     // default move ctor
 
-    ~avl_tree_ () noexcept { m_erase_ (m_begin ()); }
+    ~avl_tree_ () noexcept { m_erase_ (m_begin_ ()); }
 
     avl_tree_ &operator= (const avl_tree_ &tree_);
 
     // Accessors.
     Compare_ key_comp () const { return m_impl_.avl_tree_key_compare_ (); }
 
-    iterator begin () noexcept { return iterator (m_impl_.m_header_->m_left_;); }
+    iterator begin () noexcept { return iterator (m_impl_.m_header_->m_left_); }
 
     const_iterator begin () const noexcept { return const_iterator (m_impl_.m_header_->m_left_); }
 
@@ -435,7 +427,7 @@ template <typename Key_, typename Compare_> class avl_tree_
 
     reverse_iterator rend () noexcept { return reverse_iterator (begin ()); }
 
-    const_reverse_iterator end () const noexcept { return const_reverse_iterator (begin ()); }
+    const_reverse_iterator rend () const noexcept { return const_reverse_iterator (begin ()); }
 
     bool empty () const noexcept { return m_impl_.m_node_count_ == 0; }
 
@@ -483,18 +475,24 @@ template <typename Key_, typename Compare_> class avl_tree_
 
     size_type count (const key_type &k_) const;
 
-    iterator lower_bound (const key_type &k_) { return m_lower_bound_ (m_begin_ (), m_end (), k_); }
+    iterator lower_bound (const key_type &k_)
+    {
+        return m_lower_bound_ (m_begin_ (), m_end_ (), k_);
+    }
 
     const_iterator lower_bound (const key_type &k_) const
     {
-        return m_lower_bound_ (m_begin_ (), m_end (), k_);
+        return m_lower_bound_ (m_begin_ (), m_end_ (), k_);
     }
 
-    iterator upper_bound (const key_type &k_) { return m_upper_bound_ (m_begin_ (), m_end (), k_); }
+    iterator upper_bound (const key_type &k_)
+    {
+        return m_upper_bound_ (m_begin_ (), m_end_ (), k_);
+    }
 
     const_iterator upper_bound (const key_type &k_) const
     {
-        return m_upper_bound_ (m_begin_ (), m_end (), k_);
+        return m_upper_bound_ (m_begin_ (), m_end_ (), k_);
     }
 
     const key_type closest_left (const key_type &k_)
