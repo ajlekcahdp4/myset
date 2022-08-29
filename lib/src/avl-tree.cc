@@ -1,5 +1,3 @@
-// avl_tree_utilities implementation
-
 /*
  * ----------------------------------------------------------------------------
  * "THE BEER-WARE LICENSE" (Revision 42):
@@ -8,6 +6,8 @@
  * this stuff is worth it, you can buy me a beer in return.   Alex Romanov
  * ----------------------------------------------------------------------------
  */
+
+// avl_tree_utilities implementation
 
 #include "avl_tree.hpp"
 namespace my
