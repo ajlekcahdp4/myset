@@ -84,6 +84,13 @@ TEST (Test_avl_tree_iterator_, TestPreIncrement)
     ASSERT_EQ (*head_pos, 1);
 }
 
+TEST (Test_avl_tree_, TestInsert)
+{
+    my::avl_tree_<int> tree;
+    tree.insert (1);
+    ASSERT_EQ (*(tree.begin ()), 1);
+}
+
 int main (int argc, char *argv[])
 {
     ::testing::InitGoogleTest (&argc, argv);

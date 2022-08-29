@@ -20,6 +20,8 @@
 #include <tuple>
 #include <utility>
 
+#include <set>
+
 namespace my
 {
 
@@ -75,7 +77,7 @@ struct avl_tree_node_base_
 };
 
 // Helper type offering value initialization guarantee on the compare functor.
-template <typename key_compare_> struct avl_tree_key_compare_
+template <class key_compare_> struct avl_tree_key_compare_
 {
     key_compare_ m_key_compare_;
 
@@ -108,13 +110,20 @@ template <typename val_> struct avl_tree_node_ : public avl_tree_node_base_
 // Helper type to manage deafault initialization of node count and header.
 struct avl_tree_header_
 {
-    avl_tree_node_base_ *m_header_ = nullptr;
-    std::size_t m_node_count_      = 0;   // keeps track of size of tree
+    avl_tree_node_base_ *m_header_    = nullptr;
+    avl_tree_node_base_ *m_leftmost_  = nullptr;
+    avl_tree_node_base_ *m_rightmost_ = nullptr;
+    std::size_t m_node_count_         = 0;   // keeps track of size of tree
 
-    avl_tree_header_ () noexcept { m_reset_ (); }
+    avl_tree_header_ () noexcept
+    {
+        m_header_ = new avl_tree_node_base_;
+        m_reset_ ();
+    }
 
     avl_tree_header_ (avl_tree_header_ &&x_) noexcept
     {
+        m_header_ = new avl_tree_node_base_;
         if ( x_.m_header_->m_parent_ != nullptr )
             m_move_data_ (x_);
         else
@@ -138,7 +147,7 @@ struct avl_tree_header_
 
     void m_reset_ () noexcept
     {
-        m_header_->m_parent_ = nullptr;
+        m_header_->m_parent_ = m_header_;
         m_header_->m_left_   = nullptr;
         m_header_->m_right_  = nullptr;
         m_node_count_        = 0;
@@ -274,7 +283,43 @@ template <typename Tp_> struct avl_tree_const_iterator_
 avl_tree_node_base_ *avl_tree_rebalance_for_erase (avl_tree_node_base_ *const erased_,
                                                    avl_tree_node_base_ &header_) noexcept;
 
-template <typename Key_, typename Compare_> struct avl_tree_
+//================================avl_tree_impl_========================================
+template <typename Key_, typename Compare_>
+struct avl_tree_impl_ : public avl_tree_key_compare_<Compare_>, public avl_tree_header_
+{
+    using base_key_compare_ = avl_tree_key_compare_<Compare_>;
+
+    using base_ptr_        = avl_tree_node_base_ *;
+    using const_base_ptr_  = const avl_tree_node_base_ *;
+    using link_type_       = avl_tree_node_<Key_> *;
+    using const_link_type_ = const avl_tree_node_<Key_> *;
+    using key_type         = Key_;
+
+    avl_tree_impl_ (const avl_tree_impl_ &x_)
+        : base_key_compare_ (x_.m_key_compare_), avl_tree_header_ ()
+    {
+    }
+
+    avl_tree_impl_ () : base_key_compare_ (Compare_ {}), avl_tree_header_ () {}
+
+    avl_tree_impl_ (const Compare_ &comp_) : base_key_compare_ (comp_), avl_tree_header_ () {}
+
+    avl_tree_impl_ (avl_tree_impl_ &&x_) noexcept
+        : base_key_compare_ (std::move (x_)), avl_tree_header_ (std::move (x_))
+    {
+    }
+
+    void rotate_left_ (base_ptr_ node_);
+    void rotate_right_ (base_ptr_ node_);
+    void rotate_with_parent_ (base_ptr_ node_);
+
+    // Rebalance subtree after insert.
+    void m_rebalance_after_insert_ (base_ptr_ leaf_) noexcept;
+};
+
+//=================================avl_tree_=======================================
+template <typename Key_, class Compare_ = std::less<Key_>>
+struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
 {
     using base_ptr_        = avl_tree_node_base_ *;
     using const_base_ptr_  = const avl_tree_node_base_ *;
@@ -291,60 +336,40 @@ template <typename Key_, typename Compare_> struct avl_tree_
     using size_type       = std::size_t;
     using difference_type = std::ptrdiff_t;
 
-  public:
-    template <typename key_compare_>
-    struct avl_tree_impl_ : public avl_tree_key_compare_<key_compare_>, public avl_tree_header_
-    {
-        using base_key_compare_ = avl_tree_key_compare_<key_compare_>;
-
-        avl_tree_impl_ (const avl_tree_impl_ &x_)
-            : base_key_compare_ (x_.m_key_compare_), avl_tree_header_ ()
-        {
-        }
-
-        avl_tree_impl_ (const key_compare_ &comp_) : base_key_compare_ (comp_) {}
-
-        avl_tree_impl_ (avl_tree_impl_ &&x_) noexcept
-            : base_key_compare_ (std::move (x_)), avl_tree_header_ (std::move (x_))
-        {
-        }
-    };
-
-    avl_tree_impl_<Compare_> m_impl_;
-
-  private:
-    base_ptr_ &m_root_ () noexcept { return m_impl_.m_header_->m_parent_; }
-
-    const_base_ptr_ m_root_ () const noexcept { return m_impl_.m_header_->m_parent_; }
-
-    base_ptr_ &m_leftmost_ () noexcept { return m_impl_.m_header_->m_left_; }
-
-    const_base_ptr_ m_leftmost_ () const noexcept { return m_impl_.m_header_->m_left_; }
-
-    base_ptr_ &m_rightmost_ () noexcept { return m_impl_.m_header_->m_right_; }
-
-    const_base_ptr_ m_rightmost_ () const noexcept { return m_impl_.m_header_->m_right_; }
-
-    link_type_ m_begin_ () noexcept
-    {
-        return static_cast<link_type_> (m_impl_.m_header_->m_parent_);
-    }
-
-    const_link_type_ m_begin_ () const noexcept
-    {
-        return static_cast<const_link_type_> (m_impl_.m_header_->m_parent_);
-    }
-
-    base_ptr_ m_end_ () noexcept { return &m_impl_.m_header_; }
-
-    const_base_ptr_ m_end_ () const noexcept { return &m_impl_.m_header_; }
-
-  public:
     using iterator       = avl_tree_iterator_<value_type>;
     using const_iterator = avl_tree_const_iterator_<value_type>;
 
     using reverse_iterator       = std::reverse_iterator<iterator>;
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
+
+    using m_impl_ = avl_tree_impl_<Key_, Compare_>;
+
+  private:
+    base_ptr_ &m_root_ () noexcept { return m_impl_::m_header_; }
+
+    const_base_ptr_ m_root_ () const noexcept { return m_impl_::m_header_->m_parent_; }
+
+    base_ptr_ &m_leftmost_ () noexcept { return m_impl_::m_header_->m_left_; }
+
+    const_base_ptr_ m_leftmost_ () const noexcept { return m_impl_::m_header_->m_left_; }
+
+    base_ptr_ &m_rightmost_ () noexcept { return m_impl_::m_header_->m_right_; }
+
+    const_base_ptr_ m_rightmost_ () const noexcept { return m_impl_::m_header_->m_right_; }
+
+    link_type_ m_begin_ () noexcept
+    {
+        return static_cast<link_type_> (m_impl_::m_header_->m_parent_);
+    }
+
+    const_link_type_ m_begin_ () const noexcept
+    {
+        return static_cast<const_link_type_> (m_impl_::m_header_->m_parent_);
+    }
+
+    base_ptr_ m_end_ () noexcept { return &m_impl_::m_header_; }
+
+    const_base_ptr_ m_end_ () const noexcept { return &m_impl_::m_header_; }
 
     std::pair<base_ptr_, base_ptr_> m_get_insert_unique_pos_ (const key_type &k_);
 
@@ -355,19 +380,6 @@ template <typename Key_, typename Compare_> struct avl_tree_
 
     std::pair<base_ptr_, base_ptr_> m_get_insert_hint_equal_pos_ (const_iterator pos_,
                                                                   const key_type &k_);
-
-    template <typename F>
-    std::tuple<base_ptr_, base_ptr_, bool> m_trav_bin_search_ (key_type key_, F step_);
-
-    // Insert node in AVL tree without rebalancing.
-    base_ptr_ m_insert_node_ (link_type_ node_);
-
-    // Rebalance subtree after insert.
-    void m_rebalance_after_insert_ (base_ptr_ leaf_) noexcept;
-
-    void rotate_left_ (base_ptr_ node_);
-    void rotate_right_ (base_ptr_ node_);
-    void rotate_with_parent_ (base_ptr_ node_);
 
     link_type_ m_copy_ (const avl_tree_ &tree_);
 
@@ -384,26 +396,27 @@ template <typename Key_, typename Compare_> struct avl_tree_
                                    const key_type &k_) const;
 
   public:
+    avl_tree_ () : m_impl_ (Compare_ {}) {}
     avl_tree_ (const Compare_ &comp_) : m_impl_ (comp_) {}
 
-    avl_tree_ (const avl_tree_ &tree_) : m_impl_ (tree_.m_impl_) { m_root_ = m_copy (tree_); }
+    avl_tree_ (const avl_tree_ &tree_) { m_root_ = m_copy (tree_); }
 
     // default move ctor
 
-    ~avl_tree_ () noexcept { m_erase_ (m_begin_ ()); }
+    ~avl_tree_ () noexcept {}   // m_erase_ (m_begin_ ()); }
 
     avl_tree_ &operator= (const avl_tree_ &tree_);
 
     // Accessors.
-    Compare_ key_comp () const { return m_impl_.avl_tree_key_compare_ (); }
+    Compare_ key_comp () const { return m_impl_::base_key_compare_ (); }
 
-    iterator begin () noexcept { return iterator (m_impl_.m_header_->m_left_); }
+    iterator begin () noexcept { return iterator (m_impl_::m_header_->m_minimum_ ()); }
 
-    const_iterator begin () const noexcept { return const_iterator (m_impl_.m_header_->m_left_); }
+    const_iterator begin () const noexcept { return const_iterator (m_impl_::m_header_->m_left_); }
 
-    iterator end () noexcept { return iterator (m_impl_.m_header_); }
+    iterator end () noexcept { return iterator (m_impl_::m_header_); }
 
-    const_iterator end () const noexcept { return const_iterator (m_impl_.m_header_); }
+    const_iterator end () const noexcept { return const_iterator (m_impl_::m_header_); }
 
     reverse_iterator rbegin () noexcept { return reverse_iterator (end ()); }
 
@@ -413,22 +426,92 @@ template <typename Key_, typename Compare_> struct avl_tree_
 
     const_reverse_iterator rend () const noexcept { return const_reverse_iterator (begin ()); }
 
-    bool empty () const noexcept { return m_impl_.m_node_count_ == 0; }
-
-    size_type size () const noexcept { return m_impl_.m_node_count_; }
+    size_type size () const noexcept { return m_impl_::m_node_count_; }
 
     void swap (avl_tree_ &t_);
 
-    // Insert/erase.
+    bool empty () const noexcept { return m_impl_::m_node_count_ == 0; }
 
+    template <typename F>
+    std::tuple<base_ptr_, base_ptr_, bool> m_trav_bin_search_ (key_type key_, F step_)
+    {
+        using res_      = std::tuple<avl_tree_node_base_ *, avl_tree_node_base_ *, bool>;
+        using base_ptr_ = avl_tree_node_base_ *;
+
+        base_ptr_ curr_ = m_impl_::m_header_;
+        base_ptr_ prev_ = nullptr;
+
+        if ( !curr_ )
+            return res_ (nullptr, nullptr, false);
+
+        bool key_less_ {};
+
+        while ( curr_ && static_cast<link_type_> (curr_)->m_key_ == key_ )
+        {
+            key_less_ = m_impl_::m_key_compare_ (key_, static_cast<link_type_> (curr_)->m_key_);
+            step_ (curr_);
+            prev_ = curr_;
+            if ( key_less_ )
+                curr_ = curr_->m_left_;
+            else
+                curr_ = curr_->m_right_;
+        }
+
+        return res_ (curr_, prev_, key_less_);
+    }
+
+    // Insert/erase.
+  public:
+    // Insert node in AVL tree without rebalancing.
+    base_ptr_ m_insert_node_ (link_type_ to_insert_)
+    {
+        if ( empty () )
+        {
+            m_impl_::m_header_    = to_insert_;
+            to_insert_->m_parent_ = to_insert_;
+            m_impl_::m_leftmost_  = to_insert_;
+            m_impl_::m_rightmost_ = to_insert_;
+
+            m_impl_::m_node_count_ = 1;
+            return to_insert_;
+        }
+
+        auto res          = m_trav_bin_search_ (to_insert_->m_key_, [] (base_ptr_ &) {});
+        auto found        = std::get<0> (res);
+        auto prev         = std::get<1> (res);
+        auto prev_greater = std::get<2> (res);
+
+        if ( found )
+        {
+            delete to_insert_;
+            throw std::out_of_range ("Element already inserted");
+        }
+
+        to_insert_->m_parent_ = prev;
+
+        if ( prev_greater )
+            prev->m_left_ = to_insert_;
+        else
+            prev->m_right_ = to_insert_;
+
+        return to_insert_;
+    }
     // create node, insert and rebalance tree
-    iterator m_insert_ (const key_type &key_);
+    iterator m_insert_ (const key_type &key_)
+    {
+        auto to_insert_ = new avl_tree_node_<Key_> (key_);
+
+        auto res = m_insert_node_ (to_insert_);
+        m_impl_::m_rebalance_after_insert_ (to_insert_);
+        return iterator (res);
+    }
 
   private:
     void m_erase_aux_ (const_iterator pos_);
 
     void m_erase_aux_ (const_iterator first_, const_iterator last_);
 
+  public:
     iterator erase (const_iterator pos_)
     {
         assert (pos_ != end ());
@@ -437,6 +520,8 @@ template <typename Key_, typename Compare_> struct avl_tree_
         m_erase_aux_ (pos_);
         return res_;
     }
+
+    iterator insert (const key_type &key_) { return m_insert_ (key_); }
 
     size_type erase (const size_type &x_);
 
@@ -449,7 +534,7 @@ template <typename Key_, typename Compare_> struct avl_tree_
     void clear () noexcept
     {
         m_erase_ (m_begin_ ());
-        m_impl_.m_reset_ ();
+        m_impl_::m_reset_ ();
     }
 
     // Set operations.
@@ -481,12 +566,12 @@ template <typename Key_, typename Compare_> struct avl_tree_
 
     const key_type closest_left (const key_type &k_)
     {
-        base_ptr_ curr_  = m_impl_.m_header_;
+        base_ptr_ curr_  = m_impl_::m_header_;
         base_ptr_ bound_ = nullptr;
 
         while ( curr_ )
         {
-            bool key_less = m_impl_.m_key_compare_ (k_, static_cast<link_type_> (curr_)->m_key_);
+            bool key_less = m_key_compare_ (k_, static_cast<link_type_> (curr_)->m_key_);
             if ( !key_less )
             {
                 bound_ = curr_;
@@ -503,13 +588,12 @@ template <typename Key_, typename Compare_> struct avl_tree_
 
     const key_type closest_right (const key_type &k_)
     {
-        base_ptr_ curr_  = m_impl_.m_header_;
+        base_ptr_ curr_  = m_impl_::m_header_;
         base_ptr_ bound_ = nullptr;
 
         while ( curr_ )
         {
-            bool key_less =
-                m_impl_.avl_tree_key_compare (k_, static_cast<link_type_> (curr_)->m_key_);
+            bool key_less = avl_tree_key_compare (k_, static_cast<link_type_> (curr_)->m_key_);
             if ( !key_less )
             {
                 curr_ = curr_->m_right_;
@@ -528,7 +612,7 @@ template <typename Key_, typename Compare_> struct avl_tree_
 
   private:
     // Move elements from container.
-    void m_move_data_ (avl_tree_ &tree_) { m_impl_.m_move_data_ (tree_.m_impl_); }
+    void m_move_data_ (avl_tree_ &tree_);
 
     friend bool operator== (const avl_tree_ &x_, const avl_tree_ &y_)
     {
@@ -540,6 +624,11 @@ template <typename Key_, typename Val_, typename Comp_>
 void swap (avl_tree_<Key_, Comp_> &x_, avl_tree_<Key_, Comp_> &y_)
 {
     x_.swap (y_);
+}
+
+template <typename Key_, typename Comp_>
+void avl_tree_impl_<Key_, Comp_>::m_rebalance_after_insert_ (base_ptr_ inserted_) noexcept
+{
 }
 
 }   // namespace my
