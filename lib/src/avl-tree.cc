@@ -13,83 +13,65 @@
 namespace my
 {
 
-avl_tree_node_base_ *avl_tree_increment_impl_ (avl_tree_node_base_ *x_) noexcept
+typename avl_tree_node_base_::base_ptr_ avl_tree_node_base_::avl_tree_increment_ () noexcept
 {
-    if ( x_->m_right_ )
+    auto curr_ = this;
+    if ( curr_->m_right_ )
     {
-        x_ = x_->m_right_;
-        while ( x_->m_left_ )
-            x_ = x_->m_left_;
+        curr_ = curr_->m_right_;
+        while ( curr_->m_left_ )
+            curr_ = curr_->m_left_;
     }
     else
     {
-        avl_tree_node_base_ *y_ = x_->m_parent_;
-        while ( x_ == y_->m_right_ )
+        base_ptr_ prev_ = curr_->m_parent_;
+        while ( curr_ == prev_->m_right_ )
         {
-            x_ = y_;
-            y_ = y_->m_parent_;
+            curr_ = prev_;
+            prev_ = prev_->m_parent_;
         }
-        if ( x_->m_right_ != y_ )
-            x_ = y_;
+        if ( curr_->m_right_ != prev_ )
+            curr_ = prev_;
     }
-    return x_;
+    return curr_;
 }
 
-avl_tree_node_base_ *avl_tree_increment_ (avl_tree_node_base_ *x_) noexcept
+typename avl_tree_node_base_::base_ptr_ avl_tree_node_base_::avl_tree_decrement_ () noexcept
 {
-    return avl_tree_increment_impl_ (x_);
-}
-
-const avl_tree_node_base_ *avl_tree_increment_ (const avl_tree_node_base_ *x_) noexcept
-{
-    return avl_tree_increment_impl_ (const_cast<avl_tree_node_base_ *> (x_));
-}
-
-avl_tree_node_base_ *avl_tree_decrement_impl_ (avl_tree_node_base_ *x_) noexcept
-{
-    if ( x_->m_parent_->m_parent_ == x_ )   // if head
+    auto curr_ = this;
+    if ( curr_->m_parent_->m_parent_ == curr_ )
     {
-        x_ = x_->m_right_;
+        curr_ = curr_->m_right_;
     }
-    else if ( x_->m_left_ )
+    else if ( curr_->m_left_ )
     {
-        avl_tree_node_base_ *y_ = x_->m_left_;
-        while ( y_->m_right_ )
-            y_ = y_->m_right_;
-        x_ = y_;
+        base_ptr_ prev_ = curr_->m_left_;
+        while ( prev_->m_right_ )
+            prev_ = prev_->m_right_;
+        curr_ = prev_;
     }
     else
     {
-        avl_tree_node_base_ *y_ = x_->m_parent_;
-        while ( x_ == y_->m_left_ )
+        base_ptr_ prev_ = curr_->m_parent_;
+        while ( curr_ == prev_->m_left_ )
         {
-            x_ = y_;
-            y_ = y_->m_parent_;
+            curr_ = prev_;
+            prev_ = prev_->m_parent_;
         }
-        x_ = y_;
+        curr_ = prev_;
     }
-    return x_;
-}
-
-avl_tree_node_base_ *avl_tree_decrement_ (avl_tree_node_base_ *x_) noexcept
-{
-    return avl_tree_decrement_impl_ (x_);
-}
-
-const avl_tree_node_base_ *avl_tree_decrement_ (const avl_tree_node_base_ *x_) noexcept
-{
-    return avl_tree_decrement_impl_ (const_cast<avl_tree_node_base_ *> (x_));
+    return curr_;
 }
 
 template <typename Key_, typename Comp_>
 template <typename F>
 typename std::tuple<avl_tree_node_base_ *, avl_tree_node_base_ *, bool>
-avl_tree_<Key_, Comp_>::m_trav_bin_search (key_type key_, F step_)
+avl_tree_<Key_, Comp_>::m_trav_bin_search_ (key_type key_, F step_)
 {
     using res_      = std::tuple<avl_tree_node_base_ *, avl_tree_node_base_ *, bool>;
     using base_ptr_ = avl_tree_node_base_ *;
 
-    base_ptr_ curr_ = m_header_;
+    base_ptr_ curr_ = m_impl_.m_header_;
     base_ptr_ prev_ = nullptr;
 
     if ( !curr_ )
@@ -97,15 +79,15 @@ avl_tree_<Key_, Comp_>::m_trav_bin_search (key_type key_, F step_)
 
     bool key_less_ {};
 
-    while ( curr_ && s_key_ (curr_) == key_ )
+    while ( curr_ && static_cast<link_type_> (curr_)->m_key_ == key_ )
     {
-        key_less_ = avl_tree_key_compare_ (key_, s_key_ (curr_));
+        key_less_ = avl_tree_key_compare_ (key_, static_cast<link_type_> (curr_)->m_key_);
         step_ (curr_);
         prev_ = curr_;
         if ( key_less_ )
-            curr_ = s_left_ (curr_);
+            curr_ = curr_->m_left_;
         else
-            curr_ = s_right_ (curr_);
+            curr_ = curr_->m_right_;
     }
 
     return res_ (curr_, prev_, key_less_);
@@ -122,10 +104,10 @@ avl_tree_<Key_, Comp_>::m_lower_bound_ (link_type_ x_, base_ptr_ y_, const key_t
         if ( !key_bigger_ )
         {
             y_ = x_;
-            x_ = s_left_ (x_);
+            x_ = x_->m_left_;
         }
         else
-            x_ = s_right_ (x_);
+            x_ = x_->m_right_;
     }
     return iterator (y_);
 }
@@ -141,10 +123,10 @@ avl_tree_<Key_, Comp_>::m_lower_bound_ (const_link_type_ x_, const_base_ptr_ y_,
         if ( !key_bigger_ )
         {
             y_ = x_;
-            x_ = s_left_ (x_);
+            x_ = x_->m_left_;
         }
         else
-            x_ = s_right_ (x_);
+            x_ = x_->m_right_;
     }
     return const_iterator (y_);
 }
@@ -159,10 +141,10 @@ avl_tree_<Key_, Comp_>::m_upper_bound_ (link_type_ x_, base_ptr_ y_, const key_t
         if ( key_less_ )
         {
             y_ = x_;
-            x_ = s_left_ (x_);
+            x_ = x_->m_left_;
         }
         else
-            x_ = s_right_ (x_);
+            x_ = x_->m_right_;
     }
     return iterator (y_);
 }
@@ -178,10 +160,10 @@ avl_tree_<Key_, Comp_>::m_upper_bound_ (const_link_type_ x_, const_base_ptr_ y_,
         if ( key_less_ )
         {
             y_ = x_;
-            x_ = s_left_ (x_);
+            x_ = x_->m_left_;
         }
         else
-            x_ = s_right_ (x_);
+            x_ = x_->m_right_;
     }
     return const_iterator (y_);
 }
@@ -253,7 +235,7 @@ template <typename Key_, typename Comp_>
 void avl_tree_<Key_, Comp_>::rotate_right_ (base_ptr_ node_)
 {
     base_ptr_ lchild_ = node_->m_left_;
-    node_->m_left_    = rchild_->m_light_;
+    node_->m_left_    = lchild_->m_right_;
 
     if ( lchild_->m_right_ )
         lchild_->m_right_->m_parent_ = node_;
@@ -280,8 +262,7 @@ void avl_tree_<Key_, Comp_>::rotate_with_parent_ (base_ptr_ node_)
 }
 
 template <typename Key_, typename Comp_>
-avl_tree_node_base_ *
-avl_tree_<Key_, Comp_>::m_rebalance_after_insert_ (base_ptr_ inserted_) noexcept
+void avl_tree_<Key_, Comp_>::m_rebalance_after_insert_ (base_ptr_ inserted_) noexcept
 {
 }
 
