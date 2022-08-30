@@ -18,9 +18,7 @@ typename avl_tree_node_base_::base_ptr_ avl_tree_node_base_::avl_tree_increment_
     auto curr_ = this;
     if ( curr_->m_right_ )
     {
-        curr_ = curr_->m_right_;
-        while ( curr_->m_left_ )
-            curr_ = curr_->m_left_;
+        curr_ = curr_->m_right_->m_minimum_ ();
     }
     else
     {
@@ -45,10 +43,8 @@ typename avl_tree_node_base_::base_ptr_ avl_tree_node_base_::avl_tree_decrement_
     }
     else if ( curr_->m_left_ )
     {
-        base_ptr_ prev_ = curr_->m_left_;
-        while ( prev_->m_right_ )
-            prev_ = prev_->m_right_;
-        curr_ = prev_;
+        base_ptr_ prev_ = curr_->m_left_->m_maximum_ ();
+        curr_           = prev_;
     }
     else
     {
@@ -79,7 +75,7 @@ avl_tree_<Key_, Comp_>::m_lower_bound_ (link_type_ x_, base_ptr_ y_, const key_t
         else
             x_ = x_->m_right_;
     }
-    return iterator (y_);
+    return iterator (y_, this);
 }
 
 template <typename Key_, typename Comp_>
@@ -98,7 +94,7 @@ avl_tree_<Key_, Comp_>::m_lower_bound_ (const_link_type_ x_, const_base_ptr_ y_,
         else
             x_ = x_->m_right_;
     }
-    return const_iterator (y_);
+    return const_iterator (y_, this);
 }
 
 template <typename Key_, typename Comp_>
@@ -116,7 +112,7 @@ avl_tree_<Key_, Comp_>::m_upper_bound_ (link_type_ x_, base_ptr_ y_, const key_t
         else
             x_ = x_->m_right_;
     }
-    return iterator (y_);
+    return iterator (y_, this);
 }
 
 template <typename Key_, typename Comp_>
@@ -135,7 +131,7 @@ avl_tree_<Key_, Comp_>::m_upper_bound_ (const_link_type_ x_, const_base_ptr_ y_,
         else
             x_ = x_->m_right_;
     }
-    return const_iterator (y_);
+    return const_iterator (y_, this);
 }
 
 // Insert/Erase.

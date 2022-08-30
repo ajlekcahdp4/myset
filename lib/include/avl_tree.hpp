@@ -14,13 +14,12 @@
 #include <algorithm>
 #include <cassert>
 #include <cstddef>
+#include <fstream>
 #include <iostream>
 #include <iterator>
 #include <memory>
 #include <tuple>
 #include <utility>
-
-#include <set>
 
 namespace my
 {
@@ -148,136 +147,12 @@ struct avl_tree_header_
     void m_reset_ () noexcept
     {
         m_header_->m_parent_ = m_header_;
+        m_leftmost_          = nullptr;
+        m_rightmost_         = nullptr;
         m_header_->m_left_   = nullptr;
         m_header_->m_right_  = nullptr;
         m_node_count_        = 0;
     }
-};
-
-template <typename Tp_> struct avl_tree_iterator_
-{
-    using value_type = Tp_;
-    using reference  = Tp_ &;
-    using pointer    = Tp_ *;
-
-    using iterator_category = std::bidirectional_iterator_tag;
-    using difference_type   = std::ptrdiff_t;
-
-    using self_      = avl_tree_iterator_<Tp_>;
-    using base_ptr_  = avl_tree_node_base_ *;
-    using link_type_ = avl_tree_node_<Tp_> *;
-
-    avl_tree_iterator_ () noexcept : m_node_ () {}
-
-    explicit avl_tree_iterator_ (base_ptr_ x_) noexcept : m_node_ (x_) {}
-
-    reference operator* () const noexcept { return static_cast<link_type_> (m_node_)->m_key_; }
-
-    pointer operator-> () const noexcept { return &static_cast<link_type_> (m_node_)->m_key_; }
-
-    self_ &operator++ () noexcept   // pre-increment
-    {
-        m_node_ = m_node_->avl_tree_increment_ ();
-        return *this;
-    }
-
-    self_ operator++ (int) noexcept   // post-increment
-    {
-        self_ tmp_ = *this;
-        m_node_    = m_node_->avl_tree_increment_ ();
-        return tmp_;
-    }
-
-    self_ &operator-- () noexcept   // pre-decrement
-    {
-        m_node_ = m_node_->avl_tree_decrement_ ();
-        return *this;
-    }
-
-    self_ operator-- (int) noexcept   // post-decrement
-    {
-        self_ tmp_ = *this;
-        m_node_    = m_node_->avl_tree_decrement_ ();
-        return tmp_;
-    }
-
-    friend bool operator== (const self_ &x_, const self_ &y_) noexcept
-    {
-        return x_.m_node_ == y_.m_node_;
-    }
-
-    friend bool operator!= (const self_ &x_, const self_ &y_) noexcept
-    {
-        return x_.m_node_ != y_.m_node_;
-    }
-
-    base_ptr_ m_node_;
-};
-
-template <typename Tp_> struct avl_tree_const_iterator_
-{
-    using value_type = Tp_;
-    using reference  = const Tp_ &;
-    using pointer    = const Tp_ *;
-
-    using iterator = avl_tree_iterator_<Tp_>;
-
-    using iterator_category = std::bidirectional_iterator_tag;
-    using difference_type   = std::ptrdiff_t;
-    using self_             = avl_tree_const_iterator_<Tp_>;
-    using base_ptr_         = avl_tree_node_base_ *;
-    using link_type_        = avl_tree_node_<Tp_> *;
-    using const_link_type_  = const avl_tree_node_<Tp_> *;
-
-    avl_tree_const_iterator_ () noexcept : m_node_ () {}
-
-    avl_tree_const_iterator_ (base_ptr_ x_) noexcept : m_node_ (x_) {}
-
-    avl_tree_const_iterator_ (const iterator &it_) noexcept : m_node_ (it_.m_node_) {}
-
-    iterator m_const_cast () const noexcept { return iterator (m_node_); }
-
-    reference operator* () const noexcept { return static_cast<link_type_> (m_node_)->m_key_; }
-
-    pointer operator-> () const noexcept { return &static_cast<link_type_> (m_node_)->m_key_; }
-
-    self_ &operator++ ()
-    {
-        m_node_ = m_node_->avl_tree_increment_ ();
-        return *this;
-    }
-
-    self_ operator++ (int) noexcept   // post-increment
-    {
-        self_ tmp_ = *this;
-        m_node_    = m_node_->avl_tree_increment_ ();
-        return tmp_;
-    }
-
-    self_ &operator-- () noexcept   // pre-decrement
-    {
-        m_node_ = m_node_->avl_tree_decrement_ ();
-        return *this;
-    }
-
-    self_ operator-- (int) noexcept   // post-decrement
-    {
-        self_ tmp_ = *this;
-        m_node_    = m_node_->avl_tree_decrement_ ();
-        return tmp_;
-    }
-
-    friend bool operator== (const self_ &x_, const self_ &y_) noexcept
-    {
-        return x_.m_node_ == y_.m_node_;
-    }
-
-    friend bool operator!= (const self_ &x_, const self_ &y_) noexcept
-    {
-        return x_.m_node_ != y_.m_node_;
-    }
-
-    base_ptr_ m_node_;
 };
 
 avl_tree_node_base_ *avl_tree_rebalance_for_erase (avl_tree_node_base_ *const erased_,
@@ -326,6 +201,138 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
     using link_type_       = avl_tree_node_<Key_> *;
     using const_link_type_ = const avl_tree_node_<Key_> *;
 
+    struct avl_tree_iterator_
+    {
+        using value_type = Key_;
+        using reference  = Key_ &;
+        using pointer    = Key_ *;
+
+        using iterator_category = std::bidirectional_iterator_tag;
+        using difference_type   = std::ptrdiff_t;
+
+        using self_      = avl_tree_iterator_;
+        using base_ptr_  = avl_tree_node_base_ *;
+        using link_type_ = avl_tree_node_<Key_> *;
+
+        avl_tree_iterator_ () noexcept : m_node_ (), m_tree_ () {}
+
+        explicit avl_tree_iterator_ (base_ptr_ x_) noexcept : m_node_ (x_) {}
+
+        avl_tree_iterator_ (base_ptr_ x_, const avl_tree_ *tree_) noexcept
+            : m_node_ (x_), m_tree_ (tree_) {};
+
+        reference operator* () const noexcept { return static_cast<link_type_> (m_node_)->m_key_; }
+
+        pointer operator-> () const noexcept { return &static_cast<link_type_> (m_node_)->m_key_; }
+
+        self_ &operator++ () noexcept   // pre-increment
+        {
+            m_node_ = m_node_->avl_tree_increment_ ();
+            return *this;
+        }
+
+        self_ operator++ (int) noexcept   // post-increment
+        {
+            self_ tmp_ = *this;
+            m_node_    = m_node_->avl_tree_increment_ ();
+            return tmp_;
+        }
+
+        self_ &operator-- () noexcept   // pre-decrement
+        {
+            m_node_ = (m_node_ ? m_node_->avl_tree_decrement_ () : m_tree_->m_rightmost_ ());
+            return *this;
+        }
+
+        self_ operator-- (int) noexcept   // post-decrement
+        {
+            self_ tmp_ = *this;
+            m_node_    = (m_node_ ? m_node_->avl_tree_decrement_ () : m_tree_->m_rightmost_ ());
+            return tmp_;
+        }
+
+        friend bool operator== (const self_ &x_, const self_ &y_) noexcept
+        {
+            return x_.m_node_ == y_.m_node_;
+        }
+
+        friend bool operator!= (const self_ &x_, const self_ &y_) noexcept
+        {
+            return x_.m_node_ != y_.m_node_;
+        }
+
+        base_ptr_ m_node_;
+        const avl_tree_ *m_tree_;
+    };
+
+    struct avl_tree_const_iterator_
+    {
+        using value_type = Key_;
+        using reference  = const Key_ &;
+        using pointer    = const Key_ *;
+
+        using iterator = avl_tree_iterator_;
+
+        using iterator_category = std::bidirectional_iterator_tag;
+        using difference_type   = std::ptrdiff_t;
+        using self_             = avl_tree_const_iterator_;
+        using base_ptr_         = avl_tree_node_base_ *;
+        using link_type_        = avl_tree_node_<Key_> *;
+        using const_link_type_  = const avl_tree_node_<Key_> *;
+
+        avl_tree_const_iterator_ () noexcept : m_node_ (), m_tree_ () {}
+
+        avl_tree_const_iterator_ (base_ptr_ x_, const avl_tree_ *tree_) noexcept
+            : m_node_ (x_), m_tree_ (tree_) {};
+
+        avl_tree_const_iterator_ (const iterator &it_) noexcept : m_node_ (it_.m_node_), m_tree_ ()
+        {
+        }
+
+        reference operator* () const noexcept { return static_cast<link_type_> (m_node_)->m_key_; }
+
+        pointer operator-> () const noexcept { return &static_cast<link_type_> (m_node_)->m_key_; }
+
+        self_ &operator++ ()
+        {
+            m_node_ = m_node_->avl_tree_increment_ ();
+            return *this;
+        }
+
+        self_ operator++ (int) noexcept   // post-increment
+        {
+            self_ tmp_ = *this;
+            m_node_    = m_node_->avl_tree_increment_ ();
+            return tmp_;
+        }
+
+        self_ &operator-- () noexcept   // pre-decrement
+        {
+            m_node_ = (m_node_ ? m_node_->avl_tree_decrement_ () : m_tree_->m_rightmost_ ());
+            return *this;
+        }
+
+        self_ operator-- (int) noexcept   // post-decrement
+        {
+            self_ tmp_ = *this;
+            m_node_    = (m_node_ ? m_node_->avl_tree_decrement_ () : m_tree_->m_rightmost_ ());
+            return tmp_;
+        }
+
+        friend bool operator== (const self_ &x_, const self_ &y_) noexcept
+        {
+            return x_.m_node_ == y_.m_node_;
+        }
+
+        friend bool operator!= (const self_ &x_, const self_ &y_) noexcept
+        {
+            return x_.m_node_ != y_.m_node_;
+        }
+
+        base_ptr_ m_node_;
+        const avl_tree_ *m_tree_;
+    };
+
   public:
     using key_type        = Key_;
     using value_type      = Key_;
@@ -336,8 +343,8 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
     using size_type       = std::size_t;
     using difference_type = std::ptrdiff_t;
 
-    using iterator       = avl_tree_iterator_<value_type>;
-    using const_iterator = avl_tree_const_iterator_<value_type>;
+    using iterator       = avl_tree_iterator_;
+    using const_iterator = avl_tree_const_iterator_;
 
     using reverse_iterator       = std::reverse_iterator<iterator>;
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
@@ -347,39 +354,11 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
   private:
     base_ptr_ &m_root_ () noexcept { return m_impl_::m_header_; }
 
-    const_base_ptr_ m_root_ () const noexcept { return m_impl_::m_header_->m_parent_; }
+    const_base_ptr_ m_root_ () const noexcept { return m_impl_::m_header_; }
 
-    base_ptr_ &m_leftmost_ () noexcept { return m_impl_::m_header_->m_left_; }
+    link_type_ m_begin_ () noexcept { return m_impl_::m_leftmost_; }
 
-    const_base_ptr_ m_leftmost_ () const noexcept { return m_impl_::m_header_->m_left_; }
-
-    base_ptr_ &m_rightmost_ () noexcept { return m_impl_::m_header_->m_right_; }
-
-    const_base_ptr_ m_rightmost_ () const noexcept { return m_impl_::m_header_->m_right_; }
-
-    link_type_ m_begin_ () noexcept
-    {
-        return static_cast<link_type_> (m_impl_::m_header_->m_parent_);
-    }
-
-    const_link_type_ m_begin_ () const noexcept
-    {
-        return static_cast<const_link_type_> (m_impl_::m_header_->m_parent_);
-    }
-
-    base_ptr_ m_end_ () noexcept { return &m_impl_::m_header_; }
-
-    const_base_ptr_ m_end_ () const noexcept { return &m_impl_::m_header_; }
-
-    std::pair<base_ptr_, base_ptr_> m_get_insert_unique_pos_ (const key_type &k_);
-
-    std::pair<base_ptr_, base_ptr_> m_get_insert_equal_pos_ (const key_type &k_);
-
-    std::pair<base_ptr_, base_ptr_> m_get_insert_hint_unique_pos_ (const_iterator pos_,
-                                                                   const key_type &k_);
-
-    std::pair<base_ptr_, base_ptr_> m_get_insert_hint_equal_pos_ (const_iterator pos_,
-                                                                  const key_type &k_);
+    base_ptr_ m_end_ () noexcept { return m_impl_::m_rightmost_; }
 
     link_type_ m_copy_ (const avl_tree_ &tree_);
 
@@ -407,24 +386,33 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
 
     avl_tree_ &operator= (const avl_tree_ &tree_);
 
+    base_ptr_ m_leftmost_ () { return m_impl_::m_leftmost_; }
+    base_ptr_ m_rightmost_ () { return m_impl_::m_rightmost_; }
+
     // Accessors.
     Compare_ key_comp () const { return m_impl_::base_key_compare_ (); }
 
-    iterator begin () noexcept { return iterator (m_impl_::m_header_->m_minimum_ ()); }
+    iterator begin () noexcept { return iterator (m_impl_::m_leftmost_, this); }
 
-    const_iterator begin () const noexcept { return const_iterator (m_impl_::m_header_->m_left_); }
+    const_iterator begin () const noexcept { return const_iterator (m_impl_::m_leftmost_, this); }
 
-    iterator end () noexcept { return iterator (m_impl_::m_header_); }
+    iterator end () noexcept { return iterator (nullptr, this); }
 
-    const_iterator end () const noexcept { return const_iterator (m_impl_::m_header_); }
+    const_iterator end () const noexcept { return const_iterator (nullptr, this); }
 
-    reverse_iterator rbegin () noexcept { return reverse_iterator (end ()); }
+    reverse_iterator rbegin () noexcept { return reverse_iterator (end (), this); }
 
-    const_reverse_iterator rbegin () const noexcept { return const_reverse_iterator (end ()); }
+    const_reverse_iterator rbegin () const noexcept
+    {
+        return const_reverse_iterator (end (), this);
+    }
 
-    reverse_iterator rend () noexcept { return reverse_iterator (begin ()); }
+    reverse_iterator rend () noexcept { return reverse_iterator (begin (), this); }
 
-    const_reverse_iterator rend () const noexcept { return const_reverse_iterator (begin ()); }
+    const_reverse_iterator rend () const noexcept
+    {
+        return const_reverse_iterator (begin (), this);
+    }
 
     size_type size () const noexcept { return m_impl_::m_node_count_; }
 
@@ -490,10 +478,17 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
         to_insert_->m_parent_ = prev;
 
         if ( prev_greater )
+        {
             prev->m_left_ = to_insert_;
+            if ( prev == m_impl_::m_leftmost_ )
+                m_impl_::m_leftmost_ = to_insert_;
+        }
         else
+        {
             prev->m_right_ = to_insert_;
-
+            if ( prev == m_impl_::m_rightmost_ )
+                m_impl_::m_rightmost_ = to_insert_;
+        }
         return to_insert_;
     }
     // create node, insert and rebalance tree
@@ -503,13 +498,8 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
 
         auto res = m_insert_node_ (to_insert_);
         m_impl_::m_rebalance_after_insert_ (to_insert_);
-        return iterator (res);
+        return iterator (res, this);
     }
-
-  private:
-    void m_erase_aux_ (const_iterator pos_);
-
-    void m_erase_aux_ (const_iterator first_, const_iterator last_);
 
   public:
     iterator erase (const_iterator pos_)
@@ -518,18 +508,12 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
         const_iterator res_ = pos_;
         res_++;
         m_erase_aux_ (pos_);
-        return res_;
+        return iterator (res_, this);
     }
 
     iterator insert (const key_type &key_) { return m_insert_ (key_); }
 
     size_type erase (const size_type &x_);
-
-    iterator erase (const_iterator first_, const_iterator last_)
-    {
-        m_erase_aux_ (first_, last_);
-        return last_.m_const_cast ();
-    }
 
     void clear () noexcept
     {
@@ -617,6 +601,22 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
     friend bool operator== (const avl_tree_ &x_, const avl_tree_ &y_)
     {
         return x_.size () == y_.size () && std::equal (x_.begin (), x_.end (), y_.begin ());
+    }
+
+  public:
+    void dump () const
+    {
+        std::cerr << "DUMP\n";
+        std::ofstream p_stream {"dump.dot"};
+        assert (p_stream);
+        p_stream << "degraph {\n";
+        for ( auto pos = begin (); pos != end (); ++pos )
+        {
+            std::cerr << "*pos = " << *pos << std::endl;
+            p_stream << "\tnode_" << pos.m_node_ << "[label = \"" << *pos << "\"];\n";
+            p_stream << "\tnode_" << pos.m_node_ << " ->node_" << pos.m_node_->m_parent_ << ";\n";
+        }
+        p_stream << "}\n";
     }
 };
 
