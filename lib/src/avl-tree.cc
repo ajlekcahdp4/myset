@@ -23,13 +23,12 @@ typename avl_tree_node_base_::base_ptr_ avl_tree_node_base_::avl_tree_increment_
     else
     {
         base_ptr_ prev_ = curr_->m_parent_;
-        while ( curr_ == prev_->m_right_ )
+        while ( prev_ && curr_ == prev_->m_right_ )
         {
             curr_ = prev_;
             prev_ = prev_->m_parent_;
         }
-        if ( curr_->m_right_ != prev_ )
-            curr_ = prev_;
+        curr_ = prev_;
     }
     return curr_;
 }
@@ -37,7 +36,7 @@ typename avl_tree_node_base_::base_ptr_ avl_tree_node_base_::avl_tree_increment_
 typename avl_tree_node_base_::base_ptr_ avl_tree_node_base_::avl_tree_decrement_ () noexcept
 {
     auto curr_ = this;
-    if ( curr_->m_parent_->m_parent_ == curr_ )
+    if ( curr_->m_parent_ )
     {
         curr_ = curr_->m_right_;
     }
@@ -49,7 +48,7 @@ typename avl_tree_node_base_::base_ptr_ avl_tree_node_base_::avl_tree_decrement_
     else
     {
         base_ptr_ prev_ = curr_->m_parent_;
-        while ( curr_ == prev_->m_left_ )
+        while ( prev_ && curr_ == prev_->m_left_ )
         {
             curr_ = prev_;
             prev_ = prev_->m_parent_;
@@ -147,7 +146,7 @@ void avl_tree_impl_<Key_, Comp_>::rotate_left_ (base_ptr_ node_)
 
     rchild_->m_parent_ = node_->m_parent_;
 
-    if ( node_->m_parent_ == node_ )   // case root
+    if ( node_->m_parent_ == nullptr )
         this->m_impl_.m_header_ = rchild_;
     else if ( node_ == node_->m_parent_->m_left_ )
         node_->m_parent_->m_left_ = rchild_;
@@ -168,7 +167,7 @@ void avl_tree_impl_<Key_, Comp_>::rotate_right_ (base_ptr_ node_)
 
     lchild_->m_parent_ = node_->m_parent_;
 
-    if ( node_->m_parent_ == node_ )   // case root
+    if ( node_->m_parent_ == nullptr )   // case root
         this->m_impl_.m_header_ = lchild_;
     else if ( node_ == node_->m_parent_->m_right_ )
         node_->m_parent_->m_right_ = lchild_;

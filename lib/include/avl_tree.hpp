@@ -134,19 +134,18 @@ struct avl_tree_header_
 
     void m_move_data_ (avl_tree_header_ &from_) noexcept
     {
-        m_header_->m_height_            = from_.m_header_->m_height_;
-        m_header_->m_parent_            = from_.m_header_->m_parent_;
-        m_header_->m_left_              = from_.m_header_->m_left_;
-        m_header_->m_right_             = from_.m_header_->m_right_;
-        m_header_->m_parent_->m_parent_ = m_header_;
-        m_node_count_                   = from_.m_node_count_;
+        m_header_->m_height_ = from_.m_header_->m_height_;
+        m_header_->m_parent_ = from_.m_header_->m_parent_;
+        m_header_->m_left_   = from_.m_header_->m_left_;
+        m_header_->m_right_  = from_.m_header_->m_right_;
+        m_node_count_        = from_.m_node_count_;
 
         from_.m_reset_ ();
     }
 
     void m_reset_ () noexcept
     {
-        m_header_->m_parent_ = m_header_;
+        m_header_->m_parent_ = nullptr;
         m_leftmost_          = nullptr;
         m_rightmost_         = nullptr;
         m_header_->m_left_   = nullptr;
@@ -434,7 +433,7 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
 
         bool key_less_ {};
 
-        while ( curr_ && static_cast<link_type_> (curr_)->m_key_ == key_ )
+        while ( curr_ && static_cast<link_type_> (curr_)->m_key_ != key_ )
         {
             key_less_ = m_impl_::m_key_compare_ (key_, static_cast<link_type_> (curr_)->m_key_);
             step_ (curr_);
@@ -456,7 +455,7 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
         if ( empty () )
         {
             m_impl_::m_header_    = to_insert_;
-            to_insert_->m_parent_ = to_insert_;
+            to_insert_->m_parent_ = nullptr;
             m_impl_::m_leftmost_  = to_insert_;
             m_impl_::m_rightmost_ = to_insert_;
 
@@ -606,15 +605,33 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
   public:
     void dump () const
     {
-        std::cerr << "DUMP\n";
         std::ofstream p_stream {"dump.dot"};
         assert (p_stream);
-        p_stream << "degraph {\n";
-        for ( auto pos = begin (); pos != end (); ++pos )
+        p_stream << "digraph {\nrankdir = TB\n";
+        for ( auto pos = begin (); pos != end (); pos++ )
         {
-            std::cerr << "*pos = " << *pos << std::endl;
-            p_stream << "\tnode_" << pos.m_node_ << "[label = \"" << *pos << "\"];\n";
-            p_stream << "\tnode_" << pos.m_node_ << " ->node_" << pos.m_node_->m_parent_ << ";\n";
+            p_stream << "\tnode_" << pos.m_node_ << "[label = \"" << *pos
+                     << "\", shape=record, style=filled, fillcolor=palegreen];\n";
+
+            if ( pos.m_node_->m_left_ )
+                p_stream << "\tnode_" << pos.m_node_ << " -> node_" << pos.m_node_->m_left_
+                         << ";\n";
+            else
+            {
+                p_stream << "\tnode_" << pos.m_node_ << " -> node_0_l_" << *pos << ";\n";
+                p_stream << "\tnode_0_l_" << *pos
+                         << " [label = \"\", shape=triangle, style=filled, fillcolor=black ];\n";
+            }
+
+            if ( pos.m_node_->m_right_ )
+                p_stream << "\tnode_" << pos.m_node_ << " -> node_" << pos.m_node_->m_right_
+                         << ";\n";
+            else
+            {
+                p_stream << "\tnode_" << pos.m_node_ << " -> node_0_r_" << *pos << ";\n";
+                p_stream << "\tnode_0_r_" << *pos
+                         << " [label = \"\", shape=triangle, style=filled, fillcolor=black];\n";
+            }
         }
         p_stream << "}\n";
     }
