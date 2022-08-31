@@ -23,12 +23,17 @@ typename avl_tree_node_base_::base_ptr_ avl_tree_node_base_::avl_tree_increment_
     else
     {
         base_ptr_ prev_ = curr_->m_parent_;
-        while ( prev_ && curr_ == prev_->m_right_ )
+        assert (prev_);
+        /*       while not root      */
+        while ( prev_->m_parent_ && curr_ == prev_->m_right_ )
         {
             curr_ = prev_;
             prev_ = prev_->m_parent_;
         }
-        curr_ = prev_;
+        if ( prev_->m_parent_ )
+            curr_ = prev_;
+        else
+            curr_ = nullptr;
     }
     return curr_;
 }
@@ -48,141 +53,136 @@ typename avl_tree_node_base_::base_ptr_ avl_tree_node_base_::avl_tree_decrement_
     else
     {
         base_ptr_ prev_ = curr_->m_parent_;
-        while ( prev_ && curr_ == prev_->m_left_ )
+        /*       while not root      */
+        while ( prev_->m_parent_ && curr_ == prev_->m_left_ )
         {
             curr_ = prev_;
             prev_ = prev_->m_parent_;
         }
-        curr_ = prev_;
+        if ( prev_->m_parent_ )
+            curr_ = prev_;
+        else
+            curr_ = nullptr;
     }
     return curr_;
 }
 
-// Accessors.
-template <typename Key_, typename Comp_>
-typename avl_tree_<Key_, Comp_>::iterator
-avl_tree_<Key_, Comp_>::m_lower_bound_ (link_type_ x_, base_ptr_ y_, const key_type &k_)
+avl_tree_node_base_::base_ptr_ avl_tree_node_base_::m_fix_left_imbalance_insert_ ()
 {
-    while ( x_ )
+    auto curr_ = this;
+
+    if ( curr_->m_left_->m_bf_ == curr_->m_bf_ )
     {
-        bool key_bigger_ = avl_tree_key_compare_ (s_key_ (x_), k_);
-        if ( !key_bigger_ )
+        curr_                  = curr_->rotate_right_ ();
+        curr_->m_bf_           = 0;
+        curr_->m_right_->m_bf_ = 0;
+    }
+    else
+    {
+        auto old_bf_ = curr_->m_left_->m_right_->m_bf_;
+        curr_->m_left_->rotate_left_ ();
+        curr_        = curr_->rotate_right_ ();
+        curr_->m_bf_ = 0;
+
+        if ( old_bf_ == -1 )
         {
-            y_ = x_;
-            x_ = x_->m_left_;
+            curr_->m_left_->m_bf_  = 0;
+            curr_->m_right_->m_bf_ = 1;
+        }
+        else if ( old_bf_ == 1 )
+        {
+            curr_->m_left_->m_bf_  = -1;
+            curr_->m_right_->m_bf_ = 0;
+        }
+        else if ( old_bf_ == 0 )
+        {
+            curr_->m_left_->m_bf_  = 0;
+            curr_->m_right_->m_bf_ = 0;
         }
         else
-            x_ = x_->m_right_;
+            throw std::out_of_range ("Unexpected value of balance factor");
     }
-    return iterator (y_, this);
+    return curr_;
 }
 
-template <typename Key_, typename Comp_>
-typename avl_tree_<Key_, Comp_>::const_iterator
-avl_tree_<Key_, Comp_>::m_lower_bound_ (const_link_type_ x_, const_base_ptr_ y_,
-                                        const key_type &k_) const
+avl_tree_node_base_::base_ptr_ avl_tree_node_base_::m_fix_right_imbalance_insert_ ()
 {
-    while ( x_ )
+    auto curr_ = this;
+
+    if ( curr_->m_right_->m_bf_ == curr_->m_bf_ )
     {
-        bool key_bigger_ = avl_tree_key_compare_ (s_key_ (x_), k_);
-        if ( !key_bigger_ )
+        curr_                 = curr_->rotate_left_ ();
+        curr_->m_bf_          = 0;
+        curr_->m_left_->m_bf_ = 0;
+    }
+    else
+    {
+        auto old_bf_ = curr_->m_bf_;
+        curr_->m_right_->rotate_right_ ();
+        curr_        = curr_->rotate_left_ ();
+        curr_->m_bf_ = 0;
+
+        if ( old_bf_ == -1 )
         {
-            y_ = x_;
-            x_ = x_->m_left_;
+            curr_->m_left_->m_bf_  = 0;
+            curr_->m_right_->m_bf_ = 1;
+        }
+        else if ( old_bf_ == 1 )
+        {
+            curr_->m_left_->m_bf_  = -1;
+            curr_->m_right_->m_bf_ = 0;
+        }
+        else if ( old_bf_ == 0 )
+        {
+            curr_->m_left_->m_bf_  = 0;
+            curr_->m_right_->m_bf_ = 0;
         }
         else
-            x_ = x_->m_right_;
+            throw std::out_of_range ("Unexpected value of balance factor");
     }
-    return const_iterator (y_, this);
+    return curr_;
 }
 
-template <typename Key_, typename Comp_>
-typename avl_tree_<Key_, Comp_>::iterator
-avl_tree_<Key_, Comp_>::m_upper_bound_ (link_type_ x_, base_ptr_ y_, const key_type &k_)
+avl_tree_node_base_::base_ptr_ avl_tree_node_base_::rotate_left_ ()
 {
-    while ( x_ )
-    {
-        bool key_less_ = avl_tree_key_compare_ (k_, s_key_ (x_));
-        if ( key_less_ )
-        {
-            y_ = x_;
-            x_ = x_->m_left_;
-        }
-        else
-            x_ = x_->m_right_;
-    }
-    return iterator (y_, this);
-}
+    auto node_      = this;
+    auto rchild_    = node_->m_right_;
+    node_->m_right_ = rchild_->m_left_;
 
-template <typename Key_, typename Comp_>
-typename avl_tree_<Key_, Comp_>::const_iterator
-avl_tree_<Key_, Comp_>::m_upper_bound_ (const_link_type_ x_, const_base_ptr_ y_,
-                                        const key_type &k_) const
-{
-    while ( x_ )
-    {
-        bool key_less_ = avl_tree_key_compare_ (k_, s_key_ (x_));
-        if ( key_less_ )
-        {
-            y_ = x_;
-            x_ = x_->m_left_;
-        }
-        else
-            x_ = x_->m_right_;
-    }
-    return const_iterator (y_, this);
-}
-
-// Insert/Erase.
-
-template <typename Key_, typename Comp_>
-void avl_tree_impl_<Key_, Comp_>::rotate_left_ (base_ptr_ node_)
-{
-    base_ptr_ rchild_ = node_->m_right_;
-    node_->m_right_   = rchild_->m_left_;
-
-    if ( rchild_->m_left_ )
-        rchild_->m_left_->m_parent_ = node_;
+    if ( node_->m_right_ )
+        node_->m_right_->m_parent_ = node_;
 
     rchild_->m_parent_ = node_->m_parent_;
-
-    if ( node_->m_parent_ == nullptr )
-        this->m_impl_.m_header_ = rchild_;
-    else if ( node_ == node_->m_parent_->m_left_ )
+    if ( node_->is_left_child_ () && node_->m_parent_ != nullptr )
         node_->m_parent_->m_left_ = rchild_;
-    else
+    else if ( node_->m_parent_ )
         node_->m_parent_->m_right_ = rchild_;
+
     rchild_->m_left_ = node_;
     node_->m_parent_ = rchild_;
+
+    return rchild_;
 }
 
-template <typename Key_, typename Comp_>
-void avl_tree_impl_<Key_, Comp_>::rotate_right_ (base_ptr_ node_)
+avl_tree_node_base_::base_ptr_ avl_tree_node_base_::rotate_right_ ()
 {
-    base_ptr_ lchild_ = node_->m_left_;
-    node_->m_left_    = lchild_->m_right_;
+    auto node_     = this;
+    auto lchild_   = node_->m_left_;
+    node_->m_left_ = lchild_->m_right_;
 
-    if ( lchild_->m_right_ )
-        lchild_->m_right_->m_parent_ = node_;
+    if ( node_->m_left_ )
+        node_->m_left_->m_parent_ = node_;
 
     lchild_->m_parent_ = node_->m_parent_;
-
-    if ( node_->m_parent_ == nullptr )   // case root
-        this->m_impl_.m_header_ = lchild_;
-    else if ( node_ == node_->m_parent_->m_right_ )
-        node_->m_parent_->m_right_ = lchild_;
-    else
+    if ( node_->is_left_child_ () )
         node_->m_parent_->m_left_ = lchild_;
+    else if ( node_->m_parent_ )
+        node_->m_parent_->m_right_ = lchild_;
+
     lchild_->m_right_ = node_;
     node_->m_parent_  = lchild_;
-}
-template <typename Key_, typename Comp_>
-void avl_tree_impl_<Key_, Comp_>::rotate_with_parent_ (base_ptr_ node_)
-{
-    if ( node_->is_left_child_ () )
-        rotate_right_ (node_->m_parent_);
-    else
-        rotate_left_ (node_->m_parent_);
+
+    return lchild_;
 }
 
 }   // namespace my

@@ -11,7 +11,7 @@ TEST (Test_avl_tree_node_base_, Test_m_maximum_)
     head->m_right_->m_right_ = new my::avl_tree_node_base_ {2};
 
     auto max = head->m_maximum_ ();
-    ASSERT_EQ (max->m_height_, 2);
+    ASSERT_EQ (max->m_bf_, 2);
 }
 
 TEST (Test_avl_tree_node_base_, Test_m_minimum_)
@@ -23,7 +23,7 @@ TEST (Test_avl_tree_node_base_, Test_m_minimum_)
     head->m_left_->m_left_ = new my::avl_tree_node_base_ {-2};
 
     auto max = head->m_minimum_ ();
-    ASSERT_EQ (max->m_height_, -2);
+    ASSERT_EQ (max->m_bf_, -2);
 }
 
 TEST (Test_avl_tree_iterator_, TestCtorDeref)
@@ -88,8 +88,7 @@ TEST (Test_avl_tree_, TestInsert)
 {
     my::avl_tree_<int> tree;
     tree.insert (1);
-    tree.dump ();
-    ASSERT_NE (*(tree.begin ()), 1);
+    ASSERT_EQ (*(tree.begin ()), 1);
 }
 
 int main (int argc, char *argv[])
