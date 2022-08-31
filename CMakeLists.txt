@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.11)
 
 project (lfudacpp)
 
+set (CMAKE_CXX_COMPILER clang++)
+
 option(INSOURCEBUILD OFF)
 if((${PROJECT_SOURCE_DIR} STREQUAL ${PROJECT_BINARY_DIR}) AND NOT ${INSOURCEBUILD})
     message(FATAL_ERROR "In-source building disabled. Provide -DINSOURCEBUILD option if you are sure about it.")
