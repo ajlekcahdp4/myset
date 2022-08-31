@@ -25,7 +25,7 @@ typename avl_tree_node_base_::base_ptr_ avl_tree_node_base_::avl_tree_increment_
         base_ptr_ prev_ = curr_->m_parent_;
         assert (prev_);
         /*       while not root      */
-        while ( prev_->m_parent_ && curr_ == prev_->m_right_ )
+        while ( prev_->m_parent_ && curr_ == prev_->m_right_.get () )
         {
             curr_ = prev_;
             prev_ = prev_->m_parent_;
@@ -43,7 +43,7 @@ typename avl_tree_node_base_::base_ptr_ avl_tree_node_base_::avl_tree_decrement_
     auto curr_ = this;
     if ( curr_->m_parent_ )
     {
-        curr_ = curr_->m_right_;
+        curr_ = curr_->m_right_.get ();
     }
     else if ( curr_->m_left_ )
     {
@@ -54,7 +54,7 @@ typename avl_tree_node_base_::base_ptr_ avl_tree_node_base_::avl_tree_decrement_
     {
         base_ptr_ prev_ = curr_->m_parent_;
         /*       while not root      */
-        while ( prev_->m_parent_ && curr_ == prev_->m_left_ )
+        while ( prev_->m_parent_ && curr_ == prev_->m_left_.get () )
         {
             curr_ = prev_;
             prev_ = prev_->m_parent_;
@@ -145,44 +145,50 @@ avl_tree_node_base_::base_ptr_ avl_tree_node_base_::m_fix_right_imbalance_insert
 
 avl_tree_node_base_::base_ptr_ avl_tree_node_base_::rotate_left_ ()
 {
-    auto node_      = this;
-    auto rchild_    = node_->m_right_;
-    node_->m_right_ = rchild_->m_left_;
+    auto node_       = this;
+    auto parent_     = this->m_parent_;
+    auto rchild_     = std::move (node_->m_right_);
+    auto rchild_ptr_ = rchild_.get ();
+
+    node_->m_right_ = std::move (rchild_->m_left_);
 
     if ( node_->m_right_ )
         node_->m_right_->m_parent_ = node_;
 
-    rchild_->m_parent_ = node_->m_parent_;
-    if ( node_->is_left_child_ () && node_->m_parent_ != nullptr )
-        node_->m_parent_->m_left_ = rchild_;
-    else if ( node_->m_parent_ )
-        node_->m_parent_->m_right_ = rchild_;
+    rchild_->m_parent_ = parent_;
+    if ( node_->is_left_child_ () && parent_ != nullptr )
+        parent_->m_left_ = std::move (rchild_);
+    else if ( parent_ )
+        parent_->m_right_ = std::move (rchild_);
 
-    rchild_->m_left_ = node_;
-    node_->m_parent_ = rchild_;
+    rchild_ptr_->m_left_ = std::move (node_->move_ ());
+    parent_              = rchild_ptr_;
 
-    return rchild_;
+    return rchild_ptr_;
 }
 
 avl_tree_node_base_::base_ptr_ avl_tree_node_base_::rotate_right_ ()
 {
-    auto node_     = this;
-    auto lchild_   = node_->m_left_;
-    node_->m_left_ = lchild_->m_right_;
+    auto node_       = this;
+    auto parent_     = this->m_parent_;
+    auto lchild_     = std::move (node_->m_left_);
+    auto lchild_ptr_ = lchild_.get ();
+
+    node_->m_left_ = std::move (lchild_->m_right_);
 
     if ( node_->m_left_ )
         node_->m_left_->m_parent_ = node_;
 
-    lchild_->m_parent_ = node_->m_parent_;
+    lchild_->m_parent_ = parent_;
     if ( node_->is_left_child_ () )
-        node_->m_parent_->m_left_ = lchild_;
-    else if ( node_->m_parent_ )
-        node_->m_parent_->m_right_ = lchild_;
+        parent_->m_left_ = std::move (lchild_);
+    else if ( parent_ )
+        parent_->m_right_ = std::move (lchild_);
 
-    lchild_->m_right_ = node_;
-    node_->m_parent_  = lchild_;
+    lchild_ptr_->m_right_ = std::move (node_->move_ ());
+    parent_               = lchild_ptr_;
 
-    return lchild_;
+    return lchild_ptr_;
 }
 
 }   // namespace my

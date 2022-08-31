@@ -27,41 +27,42 @@ namespace my
 //===============================avl_tree_node_base===============================
 struct avl_tree_node_base_
 {
-    using height_t        = int;
-    using base_ptr_       = avl_tree_node_base_ *;
-    using const_base_ptr_ = const avl_tree_node_base_ *;
+    using height_t    = int;
+    using base_ptr_   = avl_tree_node_base_ *;
+    using self_       = avl_tree_node_base_;
+    using owning_ptr_ = typename std::unique_ptr<self_>;
 
-    height_t m_bf_      = 0;
-    base_ptr_ m_parent_ = nullptr;
-    base_ptr_ m_left_   = nullptr;
-    base_ptr_ m_right_  = nullptr;
+    height_t m_bf_       = 0;
+    base_ptr_ m_parent_  = nullptr;
+    owning_ptr_ m_left_  = nullptr;
+    owning_ptr_ m_right_ = nullptr;
 
     base_ptr_ m_minimum_ () noexcept
     {
         base_ptr_ x_ = this;
-        while ( x_->m_left_ )
-            x_ = x_->m_left_;
+        while ( x_->m_left_.get () )
+            x_ = x_->m_left_.get ();
         return x_;
     }
 
     base_ptr_ m_maximum_ () noexcept
     {
         base_ptr_ x_ = this;
-        while ( x_->m_right_ )
-            x_ = x_->m_right_;
+        while ( x_->m_right_.get () )
+            x_ = x_->m_right_.get ();
         return x_;
     }
 
     base_ptr_ m_predecessor_ () noexcept
     {
-        if ( m_left_ )
+        if ( m_left_.get () )
             return m_left_->m_maximum_ ();
         return nullptr;
     }
 
     base_ptr_ m_successor_ () noexcept
     {
-        if ( m_right_ )
+        if ( m_right_.get () )
             return m_right_->m_minimum_ ();
         return nullptr;
     }
@@ -79,11 +80,15 @@ struct avl_tree_node_base_
 
     bool is_left_child_ () const noexcept
     {
-        return (m_parent_ ? this == m_parent_->m_left_ : false);
+        return (m_parent_ ? this == m_parent_->m_left_.get () : false);
     }
-    bool is_right_child_ () const noexcept
+
+    owning_ptr_ &&move_ ()
     {
-        return (m_parent_ ? this == m_parent_->m_left_ : false);
+
+        if ( is_left_child_ () )
+            return std::move (m_parent_->m_left_);
+        return std::move (m_parent_->m_right_);
     }
 };
 
@@ -107,9 +112,8 @@ template <class key_compare_> struct avl_tree_key_compare_
 // Node type.
 template <typename val_> struct avl_tree_node_ : public avl_tree_node_base_
 {
-    using link_type_      = avl_tree_node_<val_>;
-    using node_ptr_       = link_type_ *;
-    using const_node_ptr_ = const link_type_ *;
+    using link_type_ = avl_tree_node_<val_>;
+    using node_ptr_  = link_type_ *;
 
     avl_tree_node_ () : avl_tree_node_base_ () {}
 
@@ -121,14 +125,18 @@ template <typename val_> struct avl_tree_node_ : public avl_tree_node_base_
 // Helper type to manage deafault initialization of node count and header.
 struct avl_tree_header_
 {
-    avl_tree_node_base_ *m_header_    = nullptr;
-    avl_tree_node_base_ *m_leftmost_  = nullptr;
-    avl_tree_node_base_ *m_rightmost_ = nullptr;
-    std::size_t m_node_count_         = 0;   // keeps track of size of tree
+    using base_ptr_   = typename avl_tree_node_base_::base_ptr_;
+    using owning_ptr_ = typename avl_tree_node_base_::owning_ptr_;
+    using base_node_  = avl_tree_node_base_;
+
+    owning_ptr_ m_header_     = nullptr;
+    base_ptr_ m_leftmost_     = nullptr;
+    base_ptr_ m_rightmost_    = nullptr;
+    std::size_t m_node_count_ = 0;
 
     avl_tree_header_ () noexcept
     {
-        m_header_ = new avl_tree_node_base_;
+        m_header_ = std::make_unique<base_node_> ();
         m_reset_ ();
     }
 
@@ -136,8 +144,8 @@ struct avl_tree_header_
     {
         m_header_->m_bf_     = from_.m_header_->m_bf_;
         m_header_->m_parent_ = from_.m_header_->m_parent_;
-        m_header_->m_left_   = from_.m_header_->m_left_;
-        m_header_->m_right_  = from_.m_header_->m_right_;
+        m_header_->m_left_   = std::move (from_.m_header_->m_left_);
+        m_header_->m_right_  = std::move (from_.m_header_->m_right_);
         m_node_count_        = from_.m_node_count_;
 
         from_.m_reset_ ();
@@ -162,11 +170,12 @@ struct avl_tree_impl_ : public avl_tree_key_compare_<Compare_>, public avl_tree_
 {
     using base_key_compare_ = avl_tree_key_compare_<Compare_>;
 
-    using base_ptr_        = avl_tree_node_base_ *;
-    using const_base_ptr_  = const avl_tree_node_base_ *;
-    using link_type_       = avl_tree_node_<Key_> *;
-    using const_link_type_ = const avl_tree_node_<Key_> *;
-    using key_type         = Key_;
+    using base_ptr_   = typename avl_tree_node_base_::base_ptr_;
+    using owning_ptr_ = typename avl_tree_node_base_::owning_ptr_;
+    using link_type_  = avl_tree_node_<Key_> *;
+    using base_node_  = avl_tree_node_base_;
+    using node_       = avl_tree_node_<Key_>;
+    using key_type    = Key_;
 
     avl_tree_impl_ (const avl_tree_impl_ &x_)
         : base_key_compare_ (x_.m_key_compare_), avl_tree_header_ ()
@@ -187,10 +196,13 @@ struct avl_tree_impl_ : public avl_tree_key_compare_<Compare_>, public avl_tree_
 template <typename Key_, class Compare_ = std::less<Key_>>
 struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
 {
-    using base_ptr_        = avl_tree_node_base_ *;
-    using const_base_ptr_  = const avl_tree_node_base_ *;
-    using link_type_       = avl_tree_node_<Key_> *;
-    using const_link_type_ = const avl_tree_node_<Key_> *;
+    using m_impl_ = avl_tree_impl_<Key_, Compare_>;
+
+    using base_ptr_   = typename m_impl_::base_ptr_;
+    using link_type_  = typename m_impl_::link_type_;
+    using owning_ptr_ = typename m_impl_::owning_ptr_;
+
+    using node_ = typename m_impl_::node_;
 
     struct avl_tree_iterator_
     {
@@ -201,9 +213,7 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
         using iterator_category = std::bidirectional_iterator_tag;
         using difference_type   = std::ptrdiff_t;
 
-        using self_      = avl_tree_iterator_;
-        using base_ptr_  = avl_tree_node_base_ *;
-        using link_type_ = avl_tree_node_<Key_> *;
+        using self_ = avl_tree_iterator_;
 
         avl_tree_iterator_ () noexcept : m_node_ (), m_tree_ () {}
 
@@ -212,9 +222,11 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
         avl_tree_iterator_ (base_ptr_ x_, const avl_tree_ *tree_) noexcept
             : m_node_ (x_), m_tree_ (tree_) {};
 
-        reference operator* () const noexcept { return static_cast<link_type_> (m_node_)->m_key_; }
+        reference operator* () const { return static_cast<link_type_> (m_node_)->m_key_; }
 
-        pointer operator-> () const noexcept { return &static_cast<link_type_> (m_node_)->m_key_; }
+        pointer get () { return &(static_cast<link_type_> (m_node_)->m_key_); }
+
+        pointer operator-> () { return get (); }
 
         self_ &operator++ () noexcept   // pre-increment
         {
@@ -257,25 +269,17 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
     };
 
   public:
-    using key_type        = Key_;
-    using value_type      = Key_;
-    using pointer         = value_type *;
-    using const_pointer   = const value_type *;
-    using reference       = value_type &;
-    using const_reference = const value_type &;
-    using size_type       = std::size_t;
-    using difference_type = std::ptrdiff_t;
+    using key_type   = Key_;
+    using value_type = Key_;
+    using pointer    = value_type *;
+    using reference  = value_type &;
+    using size_type  = std::size_t;
 
-    using iterator = avl_tree_iterator_;
-
+    using iterator         = avl_tree_iterator_;
     using reverse_iterator = std::reverse_iterator<iterator>;
 
-    using m_impl_ = avl_tree_impl_<Key_, Compare_>;
-
   private:
-    base_ptr_ &m_root_ () noexcept { return m_impl_::m_header_->m_left_; }
-
-    const_base_ptr_ m_root_ () const noexcept { return m_impl_::m_header_->m_left_; }
+    base_ptr_ m_root_ () noexcept { return m_impl_::m_header_->m_left_.get (); }
 
     link_type_ m_begin_ () noexcept { return m_impl_::m_leftmost_; }
 
@@ -288,6 +292,8 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
     iterator m_lower_bound_ (link_type_ x_, base_ptr_ y_, const key_type &k_);
 
     iterator m_upper_bound_ (link_type_ x_, base_ptr_ y_, const key_type &k_);
+
+    static key_type s_key_ (base_ptr_ node_) { return static_cast<link_type_> (node_)->m_key_; }
 
   public:
     avl_tree_ () : m_impl_ (Compare_ {}) {}
@@ -319,32 +325,29 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
 
     void swap (avl_tree_ &t_);
 
-    bool empty () const noexcept { return m_impl_::m_node_count_ == 0; }
+    bool empty () const noexcept { return (m_impl_::m_node_count_ == 0); }
 
     template <typename F>
     std::tuple<base_ptr_, base_ptr_, bool> m_trav_bin_search_ (key_type key_, F step_)
     {
-        using res_      = std::tuple<avl_tree_node_base_ *, avl_tree_node_base_ *, bool>;
-        using base_ptr_ = avl_tree_node_base_ *;
+        using res_ = std::tuple<base_ptr_, base_ptr_, bool>;
 
-        base_ptr_ prev_ = m_impl_::m_header_;
-
-        if ( !prev_ )
+        auto prev_ = m_root_ ();
+        auto curr_ = prev_;
+        if ( !curr_ )
             return res_ (nullptr, nullptr, false);
-
-        base_ptr_ curr_ = m_root_ ();
 
         bool key_less_ {};
 
         while ( curr_ && static_cast<link_type_> (curr_)->m_key_ != key_ )
         {
-            key_less_ = m_impl_::m_key_compare_ (key_, static_cast<link_type_> (curr_)->m_key_);
+            key_less_ = m_impl_::m_key_compare_ (key_, s_key_ (curr_));
             step_ (curr_);
             prev_ = curr_;
             if ( key_less_ )
-                curr_ = curr_->m_left_;
+                curr_ = curr_->m_left_.get ();
             else
-                curr_ = curr_->m_right_;
+                curr_ = curr_->m_right_.get ();
         }
 
         return res_ (curr_, prev_, key_less_);
@@ -353,26 +356,27 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
     // Insert/erase.
   public:
     // Insert node in AVL tree without rebalancing.
-    base_ptr_ m_insert_node_ (link_type_ to_insert_)
+    base_ptr_ m_insert_node_ (owning_ptr_ to_insert_)
     {
+        auto to_insert_ptr_ = to_insert_.get ();
         if ( empty () )
         {
-            m_root_ ()            = to_insert_;
-            to_insert_->m_parent_ = m_impl_::m_header_;
-            m_impl_::m_leftmost_  = to_insert_;
-            m_impl_::m_rightmost_ = to_insert_;
+            m_impl_::m_header_->m_left_ = std::move (to_insert_);
+            to_insert_ptr_->m_parent_   = m_impl_::m_header_.get ();
 
-            return to_insert_;
+            m_impl_::m_leftmost_  = to_insert_.get ();
+            m_impl_::m_rightmost_ = to_insert_.get ();
+
+            return to_insert_ptr_;
         }
 
-        auto res          = m_trav_bin_search_ (to_insert_->m_key_, [] (base_ptr_ &) {});
+        auto res          = m_trav_bin_search_ (s_key_ (to_insert_ptr_), [] (base_ptr_ &) {});
         auto found        = std::get<0> (res);
         auto prev         = std::get<1> (res);
         auto prev_greater = std::get<2> (res);
 
         if ( found )
         {
-            delete to_insert_;
             throw std::out_of_range ("Element already inserted");
         }
 
@@ -380,26 +384,27 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
 
         if ( prev_greater )
         {
-            prev->m_left_ = to_insert_;
+            prev->m_left_ = std::move (to_insert_);
             if ( prev == m_impl_::m_leftmost_ )
-                m_impl_::m_leftmost_ = to_insert_;
+                m_impl_::m_leftmost_ = to_insert_.get ();
         }
         else
         {
-            prev->m_right_ = to_insert_;
+            prev->m_right_ = std::move (to_insert_);
             if ( prev == m_impl_::m_rightmost_ )
-                m_impl_::m_rightmost_ = to_insert_;
+                m_impl_::m_rightmost_ = to_insert_.get ();
         }
 
-        return to_insert_;
+        return to_insert_ptr_;
     }
     // create node, insert and rebalance tree
     iterator m_insert_ (const key_type &key_)
     {
-        auto to_insert_ = new avl_tree_node_<Key_> (key_);
+        auto to_insert_             = new node_ (key_);
+        auto to_insert_base_unique_ = owning_ptr_ (static_cast<base_ptr_> (to_insert_));
 
-        auto res = m_insert_node_ (to_insert_);
-        m_rebalance_after_insert_ (to_insert_);
+        auto res = m_insert_node_ (std::move (to_insert_base_unique_));
+        m_rebalance_after_insert_ (res);
         m_impl_::m_node_count_ = 1;
 
         return iterator (res, this);
@@ -442,19 +447,19 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
 
     const key_type closest_left (const key_type &k_)
     {
-        base_ptr_ curr_  = m_impl_::m_header_;
+        base_ptr_ curr_  = m_impl_::m_root ();
         base_ptr_ bound_ = nullptr;
 
         while ( curr_ )
         {
-            bool key_less = m_key_compare_ (k_, static_cast<link_type_> (curr_)->m_key_);
+            bool key_less = m_key_compare_ (k_, s_key_ (curr_));
             if ( !key_less )
             {
                 bound_ = curr_;
-                curr_  = curr_->m_right_;
+                curr_  = curr_->m_right_.get ();
             }
             else
-                curr_ = curr_->m_left_;
+                curr_ = curr_->m_left_.get ();
         }
 
         if ( !bound_ )
@@ -469,15 +474,15 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
 
         while ( curr_ )
         {
-            bool key_less = avl_tree_key_compare (k_, static_cast<link_type_> (curr_)->m_key_);
+            bool key_less = avl_tree_key_compare (k_, s_key_ (curr_));
             if ( !key_less )
             {
-                curr_ = curr_->m_right_;
+                curr_ = curr_->m_right_.get ();
             }
             else
             {
                 bound_ = curr_;
-                curr_  = curr_->m_left_;
+                curr_  = curr_->m_left_.get ();
             }
         }
 
@@ -507,7 +512,7 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
                      << "\", shape=record, style=filled, fillcolor=palegreen];\n";
 
             if ( pos.m_node_->m_left_ )
-                p_stream << "\tnode_" << pos.m_node_ << " -> node_" << pos.m_node_->m_left_
+                p_stream << "\tnode_" << pos.m_node_ << " -> node_" << pos.m_node_->m_left_.get ()
                          << ";\n";
             else
             {
@@ -517,7 +522,7 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
             }
 
             if ( pos.m_node_->m_right_ )
-                p_stream << "\tnode_" << pos.m_node_ << " -> node_" << pos.m_node_->m_right_
+                p_stream << "\tnode_" << pos.m_node_ << " -> node_" << pos.m_node_->m_right_.get ()
                          << ";\n";
             else
             {
@@ -595,14 +600,14 @@ avl_tree_<Key_, Comp_>::m_lower_bound_ (link_type_ x_, base_ptr_ y_, const key_t
 {
     while ( x_ )
     {
-        bool key_bigger_ = m_impl_::m_key_compare_ (s_key_ (x_), k_);
+        bool key_bigger_ = m_impl_::m_key_compare_ (x_->m_key_, k_);
         if ( !key_bigger_ )
         {
             y_ = x_;
-            x_ = x_->m_left_;
+            x_ = x_->m_left_.get ();
         }
         else
-            x_ = x_->m_right_;
+            x_ = x_->m_right_.get ();
     }
     return iterator (y_, this);
 }
@@ -613,14 +618,14 @@ avl_tree_<Key_, Comp_>::m_upper_bound_ (link_type_ x_, base_ptr_ y_, const key_t
 {
     while ( x_ )
     {
-        bool key_less_ = m_impl_::key_compare_ (k_, s_key_ (x_));
+        bool key_less_ = m_impl_::key_compare_ (k_, x_->m_key_);
         if ( key_less_ )
         {
             y_ = x_;
-            x_ = x_->m_left_;
+            x_ = x_->m_left_.get ();
         }
         else
-            x_ = x_->m_right_;
+            x_ = x_->m_right_.get ();
     }
     return iterator (y_, this);
 }

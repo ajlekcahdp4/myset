@@ -2,13 +2,16 @@
 #include <gtest/gtest.h>
 #include <iostream>
 
+using owning_ptr_ = typename my::avl_tree_<int>::owning_ptr_;
+using base_ptr_   = typename my::avl_tree_<int>::base_ptr_;
+
 TEST (Test_avl_tree_node_base_, Test_m_maximum_)
 {
     auto head = new my::avl_tree_node_base_ {0};
 
-    head->m_left_            = new my::avl_tree_node_base_ {-1};
-    head->m_right_           = new my::avl_tree_node_base_ {1};
-    head->m_right_->m_right_ = new my::avl_tree_node_base_ {2};
+    head->m_left_            = owning_ptr_ (new my::avl_tree_node_base_ {-1});
+    head->m_right_           = owning_ptr_ (new my::avl_tree_node_base_ {1});
+    head->m_right_->m_right_ = owning_ptr_ (new my::avl_tree_node_base_ {2});
 
     auto max = head->m_maximum_ ();
     ASSERT_EQ (max->m_bf_, 2);
@@ -18,9 +21,9 @@ TEST (Test_avl_tree_node_base_, Test_m_minimum_)
 {
     auto head = new my::avl_tree_node_base_ {0};
 
-    head->m_right_         = new my::avl_tree_node_base_ {1};
-    head->m_left_          = new my::avl_tree_node_base_ {-1};
-    head->m_left_->m_left_ = new my::avl_tree_node_base_ {-2};
+    head->m_right_         = owning_ptr_ (new my::avl_tree_node_base_ {1});
+    head->m_left_          = owning_ptr_ (new my::avl_tree_node_base_ {-1});
+    head->m_left_->m_left_ = owning_ptr_ (new my::avl_tree_node_base_ {-2});
 
     auto max = head->m_minimum_ ();
     ASSERT_EQ (max->m_bf_, -2);
@@ -55,7 +58,8 @@ TEST (Test_avl_tree_iterator_, TestPostIncrement)
     auto head       = new my::avl_tree_node_<int> (0);
     head->m_parent_ = head;
 
-    head->m_right_            = new my::avl_tree_node_<int> (1);
+    auto new_node             = new my::avl_tree_node_<int> (1);
+    head->m_right_            = owning_ptr_ (static_cast<base_ptr_> (new_node));
     head->m_right_->m_parent_ = head;
 
     my::avl_tree_<int>::avl_tree_iterator_ head_pos (head);
@@ -72,7 +76,8 @@ TEST (Test_avl_tree_iterator_, TestPreIncrement)
     auto head       = new my::avl_tree_node_<int> (0);
     head->m_parent_ = head;
 
-    head->m_right_            = new my::avl_tree_node_<int> (1);
+    auto new_node             = new my::avl_tree_node_<int> (1);
+    head->m_right_            = owning_ptr_ (static_cast<base_ptr_> (new_node));
     head->m_right_->m_parent_ = head;
 
     my::avl_tree_<int>::avl_tree_iterator_ head_pos (head);
