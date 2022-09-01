@@ -14,9 +14,9 @@ int main ()
     }
     for ( int i = 1; i <= 5; i++ )
     {
+        tree.insert (i);
         std::stringstream ss;
         ss << "dump" << i;
         tree.dump (ss.str ());
-        tree.insert (i);
     }
 }

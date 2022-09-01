@@ -83,7 +83,7 @@ struct avl_tree_node_base_
         return (m_parent_ ? this == m_parent_->m_left_.get () : false);
     }
 
-    owning_ptr_ &&move_ ()
+    owning_ptr_ move_ ()
     {
 
         if ( is_left_child_ () )
@@ -364,8 +364,8 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
             m_impl_::m_header_->m_left_ = std::move (to_insert_);
             to_insert_ptr_->m_parent_   = m_impl_::m_header_.get ();
 
-            m_impl_::m_leftmost_  = to_insert_.get ();
-            m_impl_::m_rightmost_ = to_insert_.get ();
+            m_impl_::m_leftmost_  = to_insert_ptr_;
+            m_impl_::m_rightmost_ = to_insert_ptr_;
 
             return to_insert_ptr_;
         }
@@ -386,13 +386,13 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
         {
             prev->m_left_ = std::move (to_insert_);
             if ( prev == m_impl_::m_leftmost_ )
-                m_impl_::m_leftmost_ = to_insert_.get ();
+                m_impl_::m_leftmost_ = to_insert_ptr_;
         }
         else
         {
             prev->m_right_ = std::move (to_insert_);
             if ( prev == m_impl_::m_rightmost_ )
-                m_impl_::m_rightmost_ = to_insert_.get ();
+                m_impl_::m_rightmost_ = to_insert_ptr_;
         }
 
         return to_insert_ptr_;
@@ -405,7 +405,7 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
 
         auto res = m_insert_node_ (std::move (to_insert_base_unique_));
         m_rebalance_after_insert_ (res);
-        m_impl_::m_node_count_ = 1;
+        m_impl_::m_node_count_ += 1;
 
         return iterator (res, this);
     }
