@@ -508,7 +508,8 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
         p_stream << "digraph {\nrankdir = TB\n";
         for ( auto pos = begin (); pos != end (); pos++ )
         {
-            p_stream << "\tnode_" << pos.m_node_ << "[label = \"" << *pos
+            p_stream << "\tnode_" << pos.m_node_ << "[label = \"" << *pos << " | "
+                     << pos.m_node_->m_bf_
                      << "\", shape=record, style=filled, fillcolor=palegreen];\n";
 
             if ( pos.m_node_->m_left_ )
