@@ -53,7 +53,7 @@ struct avl_tree_node_base_
         return x_;
     }
 
-    base_ptr_ m_predecessor_ () noexcept
+    base_ptr_ m_predecessor_for_erase_ () noexcept
     {
         auto curr_ = this;
 
@@ -75,7 +75,7 @@ struct avl_tree_node_base_
         return parent_;
     }
 
-    base_ptr_ m_successor_ () noexcept
+    base_ptr_ m_successor_for_erase_ () noexcept
     {
         auto curr_ = this;
 
@@ -364,76 +364,13 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
     bool empty () const noexcept { return (m_impl_::m_node_count_ == 0); }
 
     template <typename F>
-    std::tuple<base_ptr_, base_ptr_, bool> m_trav_bin_search_ (key_type key_, F step_)
-    {
-        using res_ = std::tuple<base_ptr_, base_ptr_, bool>;
-
-        auto prev_ = m_root_ ();
-        auto curr_ = prev_;
-        if ( !curr_ )
-            return res_ (nullptr, nullptr, false);
-
-        bool key_less_ {};
-
-        while ( curr_ && static_cast<link_type_> (curr_)->m_key_ != key_ )
-        {
-            key_less_ = m_impl_::m_key_compare_ (key_, s_key_ (curr_));
-            step_ (curr_);
-            prev_ = curr_;
-            if ( key_less_ )
-                curr_ = curr_->m_left_.get ();
-            else
-                curr_ = curr_->m_right_.get ();
-        }
-
-        return res_ (curr_, prev_, key_less_);
-    }
+    std::tuple<base_ptr_, base_ptr_, bool> m_trav_bin_search_ (key_type key_, F step_);
 
     // Insert/erase.
 
   private:
     // Insert node in AVL tree without rebalancing.
-    base_ptr_ m_insert_node_ (owning_ptr_ to_insert_)
-    {
-        auto to_insert_ptr_ = to_insert_.get ();
-        if ( empty () )
-        {
-            m_impl_::m_header_->m_left_ = std::move (to_insert_);
-            to_insert_ptr_->m_parent_   = m_impl_::m_header_.get ();
-
-            m_impl_::m_leftmost_  = to_insert_ptr_;
-            m_impl_::m_rightmost_ = to_insert_ptr_;
-
-            return to_insert_ptr_;
-        }
-
-        auto res          = m_trav_bin_search_ (s_key_ (to_insert_ptr_), [] (base_ptr_ &) {});
-        auto found        = std::get<0> (res);
-        auto prev         = std::get<1> (res);
-        auto prev_greater = std::get<2> (res);
-
-        if ( found )
-        {
-            throw std::out_of_range ("Element already inserted");
-        }
-
-        to_insert_->m_parent_ = prev;
-
-        if ( prev_greater )
-        {
-            prev->m_left_ = std::move (to_insert_);
-            if ( prev == m_impl_::m_leftmost_ )
-                m_impl_::m_leftmost_ = to_insert_ptr_;
-        }
-        else
-        {
-            prev->m_right_ = std::move (to_insert_);
-            if ( prev == m_impl_::m_rightmost_ )
-                m_impl_::m_rightmost_ = to_insert_ptr_;
-        }
-
-        return to_insert_ptr_;
-    }
+    base_ptr_ m_insert_node_ (owning_ptr_ to_insert_);
 
     // create node, insert and rebalance tree
     iterator m_insert_ (const key_type &key_)
@@ -462,40 +399,7 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
     void m_rebalance_for_erase_ (base_ptr_ node_);
 
     // erase node from the container.
-    base_ptr_ m_erase_pos_impl_ (iterator pos_)
-    {
-        auto to_erase_    = pos_.m_node_;
-        base_ptr_ target_ = nullptr;
-
-        /* choose node's in-order successor if it has two children */
-        if ( !to_erase_->m_left_ || !to_erase_->m_right_ )
-        {
-            target_ = to_erase_;
-
-            if ( m_begin_ () == target_ )
-                m_begin_ () = target_->m_successor_ ();
-            if ( m_end_ () == target_ )
-                m_end_ () = target_->m_predecessor_ ();
-        }
-        else
-        {
-            target_ = to_erase_->m_successor_ ();
-            std::swap (s_key_ (target_), s_key_ (to_erase_));
-        }
-
-        m_rebalance_for_erase_ (target_);
-
-        auto child_u_ptr_ = std::move (target_->m_left_ ? target_->m_left_ : target_->m_right_);
-        if ( child_u_ptr_ )
-            child_u_ptr_->m_parent_ = target_->m_parent_;
-
-        if ( target_->is_left_child_ () )
-            target_->m_parent_->m_left_ = std::move (child_u_ptr_);
-        else
-            target_->m_parent_->m_right_ = std::move (child_u_ptr_);
-
-        return target_;
-    }
+    base_ptr_ m_erase_pos_impl_ (iterator pos_);
 
   public:
     iterator find (const key_type &key_)
@@ -637,8 +541,127 @@ void swap (avl_tree_<Key_, Comp_> &x_, avl_tree_<Key_, Comp_> &y_)
 }
 
 template <typename Key_, typename Comp_>
+template <typename F>
+std::tuple<typename avl_tree_<Key_, Comp_>::base_ptr_, typename avl_tree_<Key_, Comp_>::base_ptr_,
+           bool>
+avl_tree_<Key_, Comp_>::m_trav_bin_search_ (key_type key_, F step_)
+{
+    using res_ = std::tuple<base_ptr_, base_ptr_, bool>;
+
+    auto prev_ = m_root_ ();
+    auto curr_ = prev_;
+    if ( !curr_ )
+        return res_ (nullptr, nullptr, false);
+
+    bool key_less_ {};
+
+    while ( curr_ && static_cast<link_type_> (curr_)->m_key_ != key_ )
+    {
+        key_less_ = m_impl_::m_key_compare_ (key_, s_key_ (curr_));
+        step_ (curr_);
+        prev_ = curr_;
+        if ( key_less_ )
+            curr_ = curr_->m_left_.get ();
+        else
+            curr_ = curr_->m_right_.get ();
+    }
+
+    return res_ (curr_, prev_, key_less_);
+}
+
+template <typename Key_, typename Comp_>
+typename avl_tree_<Key_, Comp_>::base_ptr_
+avl_tree_<Key_, Comp_>::m_insert_node_ (owning_ptr_ to_insert_)
+{
+    auto to_insert_ptr_ = to_insert_.get ();
+    if ( empty () )
+    {
+        m_impl_::m_header_->m_left_ = std::move (to_insert_);
+        to_insert_ptr_->m_parent_   = m_impl_::m_header_.get ();
+
+        m_impl_::m_leftmost_  = to_insert_ptr_;
+        m_impl_::m_rightmost_ = to_insert_ptr_;
+
+        return to_insert_ptr_;
+    }
+
+    /* Find right position in the tree */
+    auto res          = m_trav_bin_search_ (s_key_ (to_insert_ptr_), [] (base_ptr_ &) {});
+    auto found        = std::get<0> (res);
+    auto prev         = std::get<1> (res);
+    auto prev_greater = std::get<2> (res);
+
+    if ( found )
+        throw std::out_of_range ("Element already inserted");
+
+    to_insert_->m_parent_ = prev;
+
+    if ( prev_greater )
+    {
+        prev->m_left_ = std::move (to_insert_);
+        if ( prev == m_impl_::m_leftmost_ )
+            m_impl_::m_leftmost_ = to_insert_ptr_;
+    }
+    else
+    {
+        prev->m_right_ = std::move (to_insert_);
+        if ( prev == m_impl_::m_rightmost_ )
+            m_impl_::m_rightmost_ = to_insert_ptr_;
+    }
+
+    return to_insert_ptr_;
+}
+
+template <typename Key_, typename Comp_>
+typename avl_tree_<Key_, Comp_>::base_ptr_ avl_tree_<Key_, Comp_>::m_erase_pos_impl_ (iterator pos_)
+{
+    auto to_erase_    = pos_.m_node_;
+    base_ptr_ target_ = nullptr;
+
+    /* choose node's in-order successor if it has two children */
+    if ( !to_erase_->m_left_ || !to_erase_->m_right_ )
+    {
+        target_ = to_erase_;
+
+        /* Change leftmost or rightmost if needed */
+        if ( m_begin_ () == target_ )
+            m_begin_ () = target_->m_successor_for_erase_ ();
+        if ( m_end_ () == target_ )
+            m_end_ () = target_->m_predecessor_for_erase_ ();
+    }
+    else
+    {
+        target_ =
+            to_erase_->m_successor_for_erase_ (); /* to_erase_->m_right_ exist, thus move down */
+        std::swap (s_key_ (target_), s_key_ (to_erase_));
+    }
+
+    /* rebalancing target subtree */
+    m_rebalance_for_erase_ (target_);
+
+    auto child_u_ptr_ = std::move (target_->m_left_ ? target_->m_left_ : target_->m_right_);
+
+    if ( child_u_ptr_ )
+        child_u_ptr_->m_parent_ = target_->m_parent_;
+
+    if ( target_->is_left_child_ () )
+        target_->m_parent_->m_left_ = std::move (child_u_ptr_);
+    else
+        target_->m_parent_->m_right_ = std::move (child_u_ptr_);
+
+    return target_;
+}
+
+template <typename Key_, typename Comp_>
 void avl_tree_<Key_, Comp_>::m_rebalance_after_insert_ (base_ptr_ node_)
 {
+
+    /*
+     * 1. update the balance factor of parent node;
+     * 2. rebalance if the balance factor of parent node temporarily becomes +2 or -2;
+     * 3. terminate if the height of that parent subtree remains unchanged.
+     */
+
     auto curr_   = node_;
     auto parent_ = curr_->m_parent_;
 
@@ -649,15 +672,21 @@ void avl_tree_<Key_, Comp_>::m_rebalance_after_insert_ (base_ptr_ node_)
         {
             if ( bf_ == 1 )
             {
+                /* The height of parent subtree remains unchanged, thus backtracking terminate. */
                 bf_ = 0;
                 break;
             }
             else if ( bf_ == 0 )
             {
+                /*
+                 * The height of parent subtree increases by one, thus backtracking continue.
+                 * Left-heavy.
+                 */
                 bf_ = -1;
             }
             else if ( bf_ == -1 )
             {
+                /* The balance factor becomes -2, thus need to fix imbalance. */
                 parent_->m_fix_left_imbalance_insert_ ();
                 break;
             }
@@ -668,15 +697,24 @@ void avl_tree_<Key_, Comp_>::m_rebalance_after_insert_ (base_ptr_ node_)
         {
             if ( bf_ == -1 )
             {
+                /* The height of parent subtree remains unchanged, thus backtracking terminate. */
                 bf_ = 0;
                 break;
             }
             else if ( bf_ == 0 )
             {
+                /*
+                 * Height of parent subtree increases by one, thus backtracking continue.
+                 * Right-heavy.
+                 */
                 bf_ = 1;
             }
             else if ( bf_ == 1 )
             {
+                /*
+                 * The balance factor becomes 2, thus need to fix imbalance.
+                 * After fixing parent tree has the same height, thus backtracking terminate.
+                 */
                 parent_->m_fix_right_imbalance_insert_ ();
                 break;
             }
@@ -691,6 +729,14 @@ void avl_tree_<Key_, Comp_>::m_rebalance_after_insert_ (base_ptr_ node_)
 template <typename Key_, typename Comp_>
 void avl_tree_<Key_, Comp_>::m_rebalance_for_erase_ (base_ptr_ node_)
 {
+
+    /*
+     * Backtracking algo:
+     * 1. update the balance factor of parent node;
+     * 2. rebalance if the balance factor of parent node temporarily becomes +2 or -2;
+     * 3. terminate if the height of that parent subtree remains unchanged.
+     */
+
     auto curr_   = node_;
     auto parent_ = node_->m_parent_;
 
@@ -698,42 +744,42 @@ void avl_tree_<Key_, Comp_>::m_rebalance_for_erase_ (base_ptr_ node_)
     {
         auto &parent_bf_ = parent_->m_bf_;
 
-        if ( curr_->is_left_child_ () ) /* The height of left subtree of parent subtree decreases */
+        if ( curr_
+                 ->is_left_child_ () ) /* The height of left subtree of parent subtree decreases. */
         {
             if ( parent_bf_ == -1 )
-                /* height of parent subtree decreases by one, thus continue backtracking */
+                /* The height of parent subtree decreases by one, thus continue backtracking. */
                 parent_bf_ = 0;
             else if ( parent_bf_ == 0 )
             {
-                /*  */
+                /* The height of parent subtree remains unchanged, thus backtracking terminate. */
                 parent_bf_ = 1;
                 break;
             }
             else if ( parent_bf_ == 1 )
             {
-                /* the balance factor becomes 2, thus need to fix imbalance */
+                /* The balance factor becomes 2, thus need to fix imbalance. */
                 parent_->m_fix_right_imbalance_erase_ ();
-                // if ( parent_bf_ == -1 )
                 break;
             }
             else
                 throw std::out_of_range ("Unexpected value of bf.");
         }
-        else /* The height of right subtree of parent subtree decreases */
+        else /* The height of right subtree of parent subtree decreases. */
         {
             if ( parent_bf_ == 1 )
-                /* height of parent subtree decreases by one, thus continue backtracking */
+                /* The height of parent subtree decreases by one, thus continue backtracking. */
                 parent_bf_ = 0;
             else if ( parent_bf_ == 0 )
             {
-                /*  */
+                /* The height of parent subtree remains unchanged, thus backtracking terminate. */
                 parent_bf_ = -1;
                 break;
             }
             else if ( parent_bf_ == -1 )
             {
+                /* The balance factor becomes -2, thus need to fix imbalance. */
                 parent_->m_fix_left_imbalance_erase_ ();
-                // if ( parent_bf_ == 1 )
                 break;
             }
         }
