@@ -96,6 +96,103 @@ TEST (Test_avl_tree_, TestInsert)
     ASSERT_EQ (*(tree.begin ()), 1);
 }
 
+TEST (Test_avl_tree_, TestEraseLastOne)
+{
+    my::avl_tree_<int> tree;
+    tree.insert (1);
+    tree.erase (tree.begin ());
+
+    ASSERT_TRUE (tree.empty ());
+    ASSERT_EQ (tree.begin (), tree.end ());
+}
+
+TEST (Test_avl_tree_, TestEraseLeftmost)
+{
+    my::avl_tree_<int> tree;
+    for ( int i = 6; i <= 10; i++ )
+    {
+        tree.insert (i);
+        std::stringstream ss;
+        ss << "dump" << i;
+        tree.dump (ss.str ());
+    }
+
+    EXPECT_EQ (*tree.begin (), 6);
+    tree.erase (tree.begin ());
+    ASSERT_EQ (*tree.begin (), 7);
+}
+
+TEST (Test_avl_tree_, TestEraseRightmost)
+{
+    my::avl_tree_<int> tree;
+    for ( int i = 6; i <= 10; i++ )
+    {
+        tree.insert (i);
+        std::stringstream ss;
+        ss << "dump" << i;
+        tree.dump (ss.str ());
+    }
+
+    auto last = std::prev (tree.end ());
+    EXPECT_EQ (*last, 10);
+
+    tree.erase (last);
+
+    last = std::prev (tree.end ());
+    ASSERT_EQ (*last, 9);
+}
+
+TEST (Test_avl_tree_, TestEraseThroughTheKeyOnly)
+{
+    my::avl_tree_<int> tree;
+    tree.insert (1);
+    tree.erase (1);
+
+    ASSERT_TRUE (tree.empty ());
+}
+
+TEST (Test_avl_tree_, TestEraseThroughTheKeyFirst)
+{
+    my::avl_tree_<int> tree;
+    tree.insert (1);
+    tree.insert (2);
+
+    EXPECT_EQ (*tree.begin (), 1);
+    EXPECT_EQ (*tree.rbegin (), 2);
+    tree.erase (1);
+
+    ASSERT_EQ (*tree.begin (), 2);
+    ASSERT_EQ (*tree.rbegin (), 2);
+}
+
+TEST (Test_avl_tree_, TestEraseThroughTheKeyLast)
+{
+    my::avl_tree_<int> tree;
+    tree.insert (1);
+    tree.insert (2);
+
+    EXPECT_EQ (*tree.begin (), 1);
+    EXPECT_EQ (*tree.rbegin (), 2);
+    tree.erase (2);
+
+    ASSERT_EQ (*tree.begin (), 1);
+    ASSERT_EQ (*tree.rbegin (), 1);
+}
+
+TEST (Test_avl_tree_, TestEraseWrongKey)
+{
+    my::avl_tree_<int> tree;
+    tree.insert (1);
+    tree.insert (2);
+
+    EXPECT_EQ (*tree.begin (), 1);
+    EXPECT_EQ (*tree.rbegin (), 2);
+    tree.erase (666);
+
+    ASSERT_EQ (*tree.begin (), 1);
+    ASSERT_EQ (*tree.rbegin (), 2);
+}
+
 int main (int argc, char *argv[])
 {
     ::testing::InitGoogleTest (&argc, argv);

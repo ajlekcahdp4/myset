@@ -143,6 +143,102 @@ avl_tree_node_base_::base_ptr_ avl_tree_node_base_::m_fix_right_imbalance_insert
     return curr_;
 }
 
+avl_tree_node_base_::base_ptr_ avl_tree_node_base_::m_fix_right_imbalance_erase_ ()
+{
+    auto curr_      = this;
+    auto rchild_bf_ = curr_->m_right_->m_bf_;
+
+    if ( rchild_bf_ == 1 )
+    {
+        curr_                 = curr_->rotate_left_ ();
+        curr_->m_bf_          = 0;
+        curr_->m_left_->m_bf_ = 0;
+    }
+    else if ( rchild_bf_ == 0 )
+    {
+        curr_                 = curr_->rotate_left_ ();
+        curr_->m_bf_          = -1;
+        curr_->m_left_->m_bf_ = 1;
+    }
+    else if ( rchild_bf_ == -1 )
+    {
+        auto old_bf_ = curr_->m_right_->m_left_->m_bf_;
+
+        curr_->m_right_->rotate_right_ ();
+        curr_        = curr_->rotate_left_ ();
+        curr_->m_bf_ = 0;
+
+        if ( old_bf_ == -1 )
+        {
+            curr_->m_left_->m_bf_  = 0;
+            curr_->m_right_->m_bf_ = 1;
+        }
+        else if ( old_bf_ == 1 )
+        {
+            curr_->m_left_->m_bf_  = -1;
+            curr_->m_right_->m_bf_ = 0;
+        }
+        else if ( old_bf_ == 0 )
+        {
+            curr_->m_left_->m_bf_  = 0;
+            curr_->m_right_->m_bf_ = 0;
+        }
+        else
+            throw std::out_of_range ("Unexpected value of balance factor");
+    }
+    else
+        throw std::out_of_range ("Unexpected value of balance factor");
+    return curr_;
+}
+
+avl_tree_node_base_::base_ptr_ avl_tree_node_base_::m_fix_left_imbalance_erase_ ()
+{
+    auto curr_      = this;
+    auto lchild_bf_ = curr_->m_left_->m_bf_;
+
+    if ( lchild_bf_ == -1 )
+    {
+        curr_                  = curr_->rotate_right_ ();
+        curr_->m_bf_           = 0;
+        curr_->m_right_->m_bf_ = 0;
+    }
+    else if ( lchild_bf_ == 0 )
+    {
+        curr_                  = curr_->rotate_right_ ();
+        curr_->m_bf_           = 1;
+        curr_->m_right_->m_bf_ = -1;
+    }
+    else if ( lchild_bf_ == 1 )
+    {
+        auto old_bf_ = curr_->m_left_->m_right_->m_bf_;
+
+        curr_->m_left_->rotate_left_ ();
+        curr_        = curr_->rotate_right_ ();
+        curr_->m_bf_ = 0;
+        if ( old_bf_ == -1 )
+        {
+            curr_->m_left_->m_bf_  = 0;
+            curr_->m_right_->m_bf_ = 1;
+        }
+        else if ( old_bf_ == 1 )
+        {
+            curr_->m_left_->m_bf_  = -1;
+            curr_->m_right_->m_bf_ = 0;
+        }
+        else if ( old_bf_ == 0 )
+        {
+            curr_->m_left_->m_bf_  = 0;
+            curr_->m_right_->m_bf_ = 0;
+        }
+        else
+            throw std::out_of_range ("Unexpected value of balance factor");
+    }
+    else
+        throw std::out_of_range ("Unexpected value of balance factor");
+
+    return curr_;
+}
+
 avl_tree_node_base_::base_ptr_ avl_tree_node_base_::rotate_left_ ()
 {
     auto node_       = this;

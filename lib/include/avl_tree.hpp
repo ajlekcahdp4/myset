@@ -55,17 +55,48 @@ struct avl_tree_node_base_
 
     base_ptr_ m_predecessor_ () noexcept
     {
-        if ( m_left_.get () )
-            return m_left_->m_maximum_ ();
-        return nullptr;
+        auto curr_ = this;
+
+        if ( m_left_ )
+            /* move down until we find it. */
+            return m_left_->m_minimum_ ();
+
+        /* move up until we find it or reach the root. */
+        for ( ; curr_->m_parent_->m_parent_ && curr_->is_left_child_ (); curr_ = curr_->m_parent_ )
+        {
+            ;
+        }
+
+        auto parent_ = curr_->m_parent_;
+
+        if ( !parent_->m_parent_ ) /* curr_ is a root */
+            return nullptr;
+
+        return parent_;
     }
 
     base_ptr_ m_successor_ () noexcept
     {
-        if ( m_right_.get () )
+        auto curr_ = this;
+
+        if ( m_right_ )
+            /* move down until we find it. */
             return m_right_->m_minimum_ ();
-        return nullptr;
+
+        /* move up until we find it or reach the root. */
+        for ( ; curr_->m_parent_->m_parent_ && !curr_->is_left_child_ (); curr_ = curr_->m_parent_ )
+        {
+            ;
+        }
+
+        auto parent_ = curr_->m_parent_;
+
+        if ( !parent_->m_parent_ ) /* curr_ is a root */
+            return nullptr;
+
+        return parent_;
     }
+
     base_ptr_ avl_tree_increment_ () noexcept;
     base_ptr_ avl_tree_decrement_ () noexcept;
 
@@ -73,6 +104,12 @@ struct avl_tree_node_base_
     base_ptr_ m_fix_left_imbalance_insert_ ();
     // Fix right imbalance after insertion. Return the new root.
     base_ptr_ m_fix_right_imbalance_insert_ ();
+
+    // Fix left imbalance for erase. Return the new root.
+    base_ptr_ m_fix_left_imbalance_erase_ ();
+
+    // Fixright imbalance for erase. Return the new root.
+    base_ptr_ m_fix_right_imbalance_erase_ ();
 
     base_ptr_ rotate_left_ ();
     base_ptr_ rotate_right_ ();
@@ -161,9 +198,6 @@ struct avl_tree_header_
     }
 };
 
-avl_tree_node_base_ *avl_tree_rebalance_for_erase (avl_tree_node_base_ *const erased_,
-                                                   avl_tree_node_base_ &header_) noexcept;
-
 //================================avl_tree_impl_========================================
 template <typename Key_, typename Compare_>
 struct avl_tree_impl_ : public avl_tree_key_compare_<Compare_>, public avl_tree_header_
@@ -243,14 +277,14 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
 
         self_ &operator-- () noexcept   // pre-decrement
         {
-            m_node_ = (m_node_ ? m_node_->avl_tree_decrement_ () : m_tree_->m_rightmost_ ());
+            m_node_ = (m_node_ ? m_node_->avl_tree_decrement_ () : m_tree_->m_end_ ());
             return *this;
         }
 
         self_ operator-- (int) noexcept   // post-decrement
         {
             self_ tmp_ = *this;
-            m_node_    = (m_node_ ? m_node_->avl_tree_decrement_ () : m_tree_->m_rightmost_ ());
+            m_node_    = (m_node_ ? m_node_->avl_tree_decrement_ () : m_tree_->m_end_ ());
             return tmp_;
         }
 
@@ -281,19 +315,21 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
   private:
     base_ptr_ m_root_ () noexcept { return m_impl_::m_header_->m_left_.get (); }
 
-    link_type_ m_begin_ () noexcept { return m_impl_::m_leftmost_; }
+    base_ptr_ &m_begin_ () noexcept { return m_impl_::m_leftmost_; }
 
-    base_ptr_ m_end_ () noexcept { return m_impl_::m_rightmost_; }
+    base_ptr_ m_begin_ () const noexcept { return m_impl_::m_leftmost_; }
+
+    base_ptr_ &m_end_ () noexcept { return m_impl_::m_rightmost_; }
+
+    base_ptr_ m_end_ () const noexcept { return m_impl_::m_rightmost_; }
 
     link_type_ m_copy_ (const avl_tree_ &tree_);
-
-    void m_erase_ (link_type_ x_);
 
     iterator m_lower_bound_ (link_type_ x_, base_ptr_ y_, const key_type &k_);
 
     iterator m_upper_bound_ (link_type_ x_, base_ptr_ y_, const key_type &k_);
 
-    static key_type s_key_ (base_ptr_ node_) { return static_cast<link_type_> (node_)->m_key_; }
+    static key_type &s_key_ (base_ptr_ node_) { return static_cast<link_type_> (node_)->m_key_; }
 
   public:
     avl_tree_ () : m_impl_ (Compare_ {}) {}
@@ -303,7 +339,7 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
 
     // default move ctor
 
-    ~avl_tree_ () noexcept {}   // m_erase_ (m_begin_ ()); }
+    ~avl_tree_ () noexcept {}
 
     avl_tree_ &operator= (const avl_tree_ &tree_);
 
@@ -317,9 +353,9 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
 
     iterator end () const noexcept { return iterator (nullptr, this); }
 
-    reverse_iterator rbegin () noexcept { return reverse_iterator (end (), this); }
+    reverse_iterator rbegin () noexcept { return reverse_iterator (end ()); }
 
-    reverse_iterator rend () noexcept { return reverse_iterator (begin (), this); }
+    reverse_iterator rend () noexcept { return reverse_iterator (begin ()); }
 
     size_type size () const noexcept { return m_impl_::m_node_count_; }
 
@@ -354,7 +390,8 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
     }
 
     // Insert/erase.
-  public:
+
+  private:
     // Insert node in AVL tree without rebalancing.
     base_ptr_ m_insert_node_ (owning_ptr_ to_insert_)
     {
@@ -397,6 +434,7 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
 
         return to_insert_ptr_;
     }
+
     // create node, insert and rebalance tree
     iterator m_insert_ (const key_type &key_)
     {
@@ -413,17 +451,74 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
     // Rebalance subtree after insert.
     void m_rebalance_after_insert_ (base_ptr_ leaf_);
 
-  public:
-    iterator erase (iterator pos_)
+    base_ptr_ m_erase_pos_ (iterator to_erase_pos_)
     {
-        assert (pos_ != end ());
-        iterator res_ = pos_;
-        res_++;
-        m_erase_aux_ (pos_);
-        return iterator (res_, this);
+        auto res_ = m_erase_pos_impl_ (to_erase_pos_);
+        m_impl_::m_node_count_ -= 1;
+        return res_;
+    }
+
+    // Rebalance tree for erase.
+    void m_rebalance_for_erase_ (base_ptr_ node_);
+
+    // erase node from the container.
+    base_ptr_ m_erase_pos_impl_ (iterator pos_)
+    {
+        auto to_erase_    = pos_.m_node_;
+        base_ptr_ target_ = nullptr;
+
+        /* choose node's in-order successor if it has two children */
+        if ( !to_erase_->m_left_ || !to_erase_->m_right_ )
+        {
+            target_ = to_erase_;
+
+            if ( m_begin_ () == target_ )
+                m_begin_ () = target_->m_successor_ ();
+            if ( m_end_ () == target_ )
+                m_end_ () = target_->m_predecessor_ ();
+        }
+        else
+        {
+            target_ = to_erase_->m_successor_ ();
+            std::swap (s_key_ (target_), s_key_ (to_erase_));
+        }
+
+        m_rebalance_for_erase_ (target_);
+
+        auto child_u_ptr_ = std::move (target_->m_left_ ? target_->m_left_ : target_->m_right_);
+        if ( child_u_ptr_ )
+            child_u_ptr_->m_parent_ = target_->m_parent_;
+
+        if ( target_->is_left_child_ () )
+            target_->m_parent_->m_left_ = std::move (child_u_ptr_);
+        else
+            target_->m_parent_->m_right_ = std::move (child_u_ptr_);
+
+        return target_;
+    }
+
+  public:
+    iterator find (const key_type &key_)
+    {
+        auto tuple_ = m_trav_bin_search_ (key_, [] (base_ptr_ &) {});
+        return iterator (std::get<0> (tuple_), this);
     }
 
     iterator insert (const key_type &key_) { return m_insert_ (key_); }
+
+    bool erase (const key_type &key_)
+    {
+        auto to_erase_pos_ = find (key_);
+        if ( to_erase_pos_ != end () )
+            return m_erase_pos_ (to_erase_pos_);
+        return false;
+    }
+
+    void erase (iterator pos_)
+    {
+        if ( pos_ != end () )
+            m_erase_pos_ (pos_);
+    }
 
     void clear () noexcept
     {
@@ -432,7 +527,6 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
     }
 
     // Set operations.
-    iterator find (const key_type &k_);
     size_type count (const key_type &k_) const;
 
     iterator lower_bound (const key_type &k_)
@@ -589,6 +683,61 @@ void avl_tree_<Key_, Comp_>::m_rebalance_after_insert_ (base_ptr_ node_)
             else
                 throw std::out_of_range ("Unexpected value of bf.");
         }
+        curr_   = parent_;
+        parent_ = curr_->m_parent_;
+    }
+}
+
+template <typename Key_, typename Comp_>
+void avl_tree_<Key_, Comp_>::m_rebalance_for_erase_ (base_ptr_ node_)
+{
+    auto curr_   = node_;
+    auto parent_ = node_->m_parent_;
+
+    while ( curr_ != m_root_ () )
+    {
+        auto &parent_bf_ = parent_->m_bf_;
+
+        if ( curr_->is_left_child_ () ) /* The height of left subtree of parent subtree decreases */
+        {
+            if ( parent_bf_ == -1 )
+                /* height of parent subtree decreases by one, thus continue backtracking */
+                parent_bf_ = 0;
+            else if ( parent_bf_ == 0 )
+            {
+                /*  */
+                parent_bf_ = 1;
+                break;
+            }
+            else if ( parent_bf_ == 1 )
+            {
+                /* the balance factor becomes 2, thus need to fix imbalance */
+                parent_->m_fix_right_imbalance_erase_ ();
+                // if ( parent_bf_ == -1 )
+                break;
+            }
+            else
+                throw std::out_of_range ("Unexpected value of bf.");
+        }
+        else /* The height of right subtree of parent subtree decreases */
+        {
+            if ( parent_bf_ == 1 )
+                /* height of parent subtree decreases by one, thus continue backtracking */
+                parent_bf_ = 0;
+            else if ( parent_bf_ == 0 )
+            {
+                /*  */
+                parent_bf_ = -1;
+                break;
+            }
+            else if ( parent_bf_ == -1 )
+            {
+                parent_->m_fix_left_imbalance_erase_ ();
+                // if ( parent_bf_ == 1 )
+                break;
+            }
+        }
+
         curr_   = parent_;
         parent_ = curr_->m_parent_;
     }

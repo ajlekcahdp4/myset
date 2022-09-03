@@ -19,4 +19,12 @@ int main ()
         ss << "dump" << i;
         tree.dump (ss.str ());
     }
+
+    for ( int i = 6; i <= 10; i++ )
+    {
+        tree.erase (i);
+        std::stringstream ss;
+        ss << "dump_erase" << i;
+        tree.dump (ss.str ());
+    }
 }
