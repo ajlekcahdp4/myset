@@ -41,19 +41,23 @@ struct avl_tree_node_base_
 
     static size_type size (base_ptr_ node_) { return (node_ ? node_->m_size_ : 0); }
 
+    base_ptr_ m_left () noexcept { return m_left_.get (); }
+
+    base_ptr_ m_right () noexcept { return m_right_.get (); }
+
     base_ptr_ m_minimum_ () noexcept
     {
         base_ptr_ x_ = this;
-        while ( x_->m_left_.get () )
-            x_ = x_->m_left_.get ();
+        while ( x_->m_left () )
+            x_ = x_->m_left ();
         return x_;
     }
 
     base_ptr_ m_maximum_ () noexcept
     {
         base_ptr_ x_ = this;
-        while ( x_->m_right_.get () )
-            x_ = x_->m_right_.get ();
+        while ( x_->m_right () )
+            x_ = x_->m_right ();
         return x_;
     }
 
@@ -121,7 +125,7 @@ struct avl_tree_node_base_
 
     bool is_left_child_ () const noexcept
     {
-        return (m_parent_ ? this == m_parent_->m_left_.get () : false);
+        return (m_parent_ ? this == m_parent_->m_left () : false);
     }
 
     owning_ptr_ move_ ()
@@ -319,9 +323,9 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
     using reverse_iterator = std::reverse_iterator<iterator>;
 
   private:
-    base_ptr_ m_root_ () noexcept { return m_impl_::m_header_->m_left_.get (); }
+    base_ptr_ m_root_ () noexcept { return m_impl_::m_header_->m_left (); }
 
-    const base_ptr_ m_root_ () const noexcept { return m_impl_::m_header_->m_left_.get (); }
+    const base_ptr_ m_root_ () const noexcept { return m_impl_::m_header_->m_left (); }
 
     base_ptr_ &m_begin_ () noexcept { return m_impl_::m_leftmost_; }
 
@@ -465,10 +469,10 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
             if ( !key_less )
             {
                 bound_ = curr_;
-                curr_  = curr_->m_right_.get ();
+                curr_  = curr_->m_right ();
             }
             else
-                curr_ = curr_->m_left_.get ();
+                curr_ = curr_->m_left ();
         }
 
         if ( !bound_ )
@@ -486,12 +490,12 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
             bool key_less = avl_tree_key_compare (k_, s_key_ (curr_));
             if ( !key_less )
             {
-                curr_ = curr_->m_right_.get ();
+                curr_ = curr_->m_right ();
             }
             else
             {
                 bound_ = curr_;
-                curr_  = curr_->m_left_.get ();
+                curr_  = curr_->m_left ();
             }
         }
 
@@ -522,7 +526,7 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
                      << "\", shape=record, style=filled, fillcolor=palegreen];\n";
 
             if ( pos.m_node_->m_left_ )
-                p_stream << "\tnode_" << pos.m_node_ << " -> node_" << pos.m_node_->m_left_.get ()
+                p_stream << "\tnode_" << pos.m_node_ << " -> node_" << pos.m_node_->m_left ()
                          << ";\n";
             else
             {
@@ -532,7 +536,7 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
             }
 
             if ( pos.m_node_->m_right_ )
-                p_stream << "\tnode_" << pos.m_node_ << " -> node_" << pos.m_node_->m_right_.get ()
+                p_stream << "\tnode_" << pos.m_node_ << " -> node_" << pos.m_node_->m_right ()
                          << ";\n";
             else
             {
@@ -560,20 +564,20 @@ typename avl_tree_<Key_, Comp_>::key_type avl_tree_<Key_, Comp_>::m_os_select_ (
     auto curr_ = m_root_ ();
 
     /* The rank of node is the size of left subtree plus 1. */
-    size_t rank_ = base_node_::size (curr_->m_left_.get ()) + 1;
+    size_t rank_ = base_node_::size (curr_->m_left ()) + 1;
 
     while ( rank_ != i )
     {
         if ( i < rank_ )
-            curr_ = curr_->m_left_.get ();
+            curr_ = curr_->m_left ();
         else
         {
-            curr_ = curr_->m_right_.get ();
+            curr_ = curr_->m_right ();
 
             /* Reduce i, cause we've already passed rank_ smallest nodes. */
             i -= rank_;
         }
-        rank_ = base_node_::size (curr_->m_left_.get ()) + 1;
+        rank_ = base_node_::size (curr_->m_left ()) + 1;
     }
 
     return s_key_ (curr_);
@@ -600,9 +604,9 @@ avl_tree_<Key_, Comp_>::m_trav_bin_search_ (key_type key_, F step_)
         step_ (curr_);
         prev_ = curr_;
         if ( key_less_ )
-            curr_ = curr_->m_left_.get ();
+            curr_ = curr_->m_left ();
         else
-            curr_ = curr_->m_right_.get ();
+            curr_ = curr_->m_right ();
     }
 
     return res_ (curr_, prev_, key_less_);
@@ -842,10 +846,10 @@ avl_tree_<Key_, Comp_>::m_lower_bound_ (link_type_ x_, base_ptr_ y_, const key_t
         if ( !key_bigger_ )
         {
             y_ = x_;
-            x_ = x_->m_left_.get ();
+            x_ = x_->m_left ();
         }
         else
-            x_ = x_->m_right_.get ();
+            x_ = x_->m_right ();
     }
     return iterator (y_, this);
 }
@@ -860,10 +864,10 @@ avl_tree_<Key_, Comp_>::m_upper_bound_ (link_type_ x_, base_ptr_ y_, const key_t
         if ( key_less_ )
         {
             y_ = x_;
-            x_ = x_->m_left_.get ();
+            x_ = x_->m_left ();
         }
         else
-            x_ = x_->m_right_.get ();
+            x_ = x_->m_right ();
     }
     return iterator (y_, this);
 }

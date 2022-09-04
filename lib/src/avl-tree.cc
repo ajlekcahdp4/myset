@@ -25,7 +25,7 @@ typename avl_tree_node_base_::base_ptr_ avl_tree_node_base_::avl_tree_increment_
         base_ptr_ prev_ = curr_->m_parent_;
         assert (prev_);
         /*       while not root      */
-        while ( prev_->m_parent_ && curr_ == prev_->m_right_.get () )
+        while ( prev_->m_parent_ && curr_ == prev_->m_right () )
         {
             curr_ = prev_;
             prev_ = prev_->m_parent_;
@@ -43,7 +43,7 @@ typename avl_tree_node_base_::base_ptr_ avl_tree_node_base_::avl_tree_decrement_
     auto curr_ = this;
     if ( curr_->m_parent_ )
     {
-        curr_ = curr_->m_right_.get ();
+        curr_ = curr_->m_right ();
     }
     else if ( curr_->m_left_ )
     {
@@ -54,7 +54,7 @@ typename avl_tree_node_base_::base_ptr_ avl_tree_node_base_::avl_tree_decrement_
     {
         base_ptr_ prev_ = curr_->m_parent_;
         /*       while not root      */
-        while ( prev_->m_parent_ && curr_ == prev_->m_left_.get () )
+        while ( prev_->m_parent_ && curr_ == prev_->m_left () )
         {
             curr_ = prev_;
             prev_ = prev_->m_parent_;
@@ -267,7 +267,7 @@ avl_tree_node_base_::base_ptr_ avl_tree_node_base_::rotate_left_ ()
 
     /* update rchild's and node's sizes (the only sizes changed) */
     rchild_ptr_->m_size_ = node_->m_size_;
-    node_->m_size_ = self_::size (node_->m_left_.get ()) + self_::size (node_->m_right_.get ()) + 1;
+    node_->m_size_       = self_::size (node_->m_left ()) + self_::size (node_->m_right ()) + 1;
 
     return rchild_ptr_;
 }
@@ -301,7 +301,7 @@ avl_tree_node_base_::base_ptr_ avl_tree_node_base_::rotate_right_ ()
 
     /* update rchild's and node's sizes (the only sizes changed) */
     lchild_ptr_->m_size_ = node_->m_size_;
-    node_->m_size_ = self_::size (node_->m_left_.get ()) + self_::size (node_->m_right_.get ()) + 1;
+    node_->m_size_       = self_::size (node_->m_left ()) + self_::size (node_->m_right ()) + 1;
 
     return lchild_ptr_;
 }
