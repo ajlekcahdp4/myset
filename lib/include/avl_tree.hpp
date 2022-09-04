@@ -171,10 +171,9 @@ struct avl_tree_header_
     using base_node_  = avl_tree_node_base_;
     using size_type   = typename avl_tree_node_base_::size_type;
 
-    owning_ptr_ m_header_     = nullptr;
-    base_ptr_ m_leftmost_     = nullptr;
-    base_ptr_ m_rightmost_    = nullptr;
-    std::size_t m_node_count_ = 0;
+    owning_ptr_ m_header_  = nullptr;
+    base_ptr_ m_leftmost_  = nullptr;
+    base_ptr_ m_rightmost_ = nullptr;
 
     avl_tree_header_ () noexcept
     {
@@ -188,7 +187,6 @@ struct avl_tree_header_
         m_header_->m_parent_ = from_.m_header_->m_parent_;
         m_header_->m_left_   = std::move (from_.m_header_->m_left_);
         m_header_->m_right_  = std::move (from_.m_header_->m_right_);
-        m_node_count_        = from_.m_node_count_;
 
         from_.m_reset_ ();
     }
@@ -199,7 +197,6 @@ struct avl_tree_header_
         m_leftmost_          = nullptr;
         m_rightmost_         = nullptr;
         m_header_->m_left_   = nullptr;
-        m_node_count_        = 0;
     }
 };
 
@@ -324,6 +321,8 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
   private:
     base_ptr_ m_root_ () noexcept { return m_impl_::m_header_->m_left_.get (); }
 
+    const base_ptr_ m_root_ () const noexcept { return m_impl_::m_header_->m_left_.get (); }
+
     base_ptr_ &m_begin_ () noexcept { return m_impl_::m_leftmost_; }
 
     base_ptr_ m_begin_ () const noexcept { return m_impl_::m_leftmost_; }
@@ -366,9 +365,13 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
 
     reverse_iterator rend () noexcept { return reverse_iterator (begin ()); }
 
-    size_type size () const noexcept { return m_impl_::m_node_count_; }
+    size_type size () const noexcept
+    {
+        auto root_ = m_root_ ();
+        return (root_ ? base_node_::size (root_) : 0);
+    }
 
-    bool empty () const noexcept { return (m_impl_::m_node_count_ == 0); }
+    bool empty () const noexcept { return (size () == 0); }
 
     template <typename F>
     std::tuple<base_ptr_, base_ptr_, bool> m_trav_bin_search_ (key_type key_, F step_);
@@ -387,7 +390,6 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
 
         auto res = m_insert_node_ (std::move (to_insert_base_unique_));
         m_rebalance_after_insert_ (res);
-        m_impl_::m_node_count_ += 1;
 
         return iterator (res, this);
     }
@@ -398,7 +400,6 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
     base_ptr_ m_erase_pos_ (iterator to_erase_pos_)
     {
         auto res_ = m_erase_pos_impl_ (to_erase_pos_);
-        m_impl_::m_node_count_ -= 1;
         return res_;
     }
 
