@@ -265,6 +265,10 @@ avl_tree_node_base_::base_ptr_ avl_tree_node_base_::rotate_left_ ()
 
     node_->m_parent_ = rchild_ptr_;
 
+    /* update rchild's and node's sizes (the only sizes changed) */
+    rchild_ptr_->m_size_ = node_->m_size_;
+    node_->m_size_ = self_::size (node_->m_left_.get ()) + self_::size (node_->m_right_.get ()) + 1;
+
     return rchild_ptr_;
 }
 
@@ -294,6 +298,10 @@ avl_tree_node_base_::base_ptr_ avl_tree_node_base_::rotate_right_ ()
     }
 
     node_->m_parent_ = lchild_ptr_;
+
+    /* update rchild's and node's sizes (the only sizes changed) */
+    lchild_ptr_->m_size_ = node_->m_size_;
+    node_->m_size_ = self_::size (node_->m_left_.get ()) + self_::size (node_->m_right_.get ()) + 1;
 
     return lchild_ptr_;
 }

@@ -33,9 +33,12 @@ struct avl_tree_node_base_
     using owning_ptr_ = typename std::unique_ptr<self_>;
 
     height_t m_bf_       = 0;
+    height_t m_size_     = 1;
     base_ptr_ m_parent_  = nullptr;
     owning_ptr_ m_left_  = nullptr;
     owning_ptr_ m_right_ = nullptr;
+
+    static height_t size (base_ptr_ node_) { return (node_ ? node_->m_size_ : 0); }
 
     base_ptr_ m_minimum_ () noexcept
     {
@@ -506,8 +509,8 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
         p_stream << "digraph {\nrankdir = TB\n";
         for ( auto pos = begin (); pos != end (); pos++ )
         {
-            p_stream << "\tnode_" << pos.m_node_ << "[label = \"" << *pos << " | "
-                     << pos.m_node_->m_bf_
+            p_stream << "\tnode_" << pos.m_node_ << "[label = \"{" << *pos << " | "
+                     << pos.m_node_->m_bf_ << "} | " << pos.m_node_->m_size_
                      << "\", shape=record, style=filled, fillcolor=palegreen];\n";
 
             if ( pos.m_node_->m_left_ )
@@ -586,14 +589,17 @@ avl_tree_<Key_, Comp_>::m_insert_node_ (owning_ptr_ to_insert_)
     }
 
     /* Find right position in the tree */
-    auto res          = m_trav_bin_search_ (s_key_ (to_insert_ptr_), [] (base_ptr_ &) {});
+    auto res =
+        m_trav_bin_search_ (s_key_ (to_insert_ptr_), [] (base_ptr_ &node_) { node_->m_size_++; });
     auto found        = std::get<0> (res);
     auto prev         = std::get<1> (res);
     auto prev_greater = std::get<2> (res);
 
     if ( found )
+    {
+        m_trav_bin_search_ (s_key_ (to_insert_ptr_), [] (base_ptr_ &node_) { node_->m_size_--; });
         throw std::out_of_range ("Element already inserted");
-
+    }
     to_insert_->m_parent_ = prev;
 
     if ( prev_greater )
