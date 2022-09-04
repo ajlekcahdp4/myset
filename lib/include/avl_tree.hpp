@@ -446,6 +446,9 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
         return m_upper_bound_ (m_begin_ (), m_end_ (), k_);
     }
 
+    // return key value of ith smallest element in AVL-tree
+    key_type m_os_select_ (size_t i);
+
     const key_type closest_left (const key_type &k_)
     {
         base_ptr_ curr_  = m_impl_::m_root ();
@@ -541,6 +544,34 @@ template <typename Key_, typename Val_, typename Comp_>
 void swap (avl_tree_<Key_, Comp_> &x_, avl_tree_<Key_, Comp_> &y_)
 {
     x_.swap (y_);
+}
+
+template <typename Key_, typename Comp_>
+typename avl_tree_<Key_, Comp_>::key_type avl_tree_<Key_, Comp_>::m_os_select_ (size_t i)
+{
+    if ( i > size () || !i )
+        throw std::out_of_range ("i is greater then the size of the tree or zero.");
+
+    auto curr_ = m_root_ ();
+
+    /* The rank of node is the size of left subtree plus 1. */
+    size_t rank_ = base_node_::size (curr_->m_left_.get ()) + 1;
+
+    while ( rank_ != i )
+    {
+        if ( i < rank_ )
+            curr_ = curr_->m_left_.get ();
+        else
+        {
+            curr_ = curr_->m_right_.get ();
+
+            /* Reduce i, cause we've already passed rank_ smallest nodes. */
+            i -= rank_;
+        }
+        rank_ = base_node_::size (curr_->m_left_.get ()) + 1;
+    }
+
+    return s_key_ (curr_);
 }
 
 template <typename Key_, typename Comp_>
