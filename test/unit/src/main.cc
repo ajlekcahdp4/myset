@@ -193,6 +193,50 @@ TEST (Test_avl_tree_, TestEraseWrongKey)
     ASSERT_EQ (*tree.rbegin (), 2);
 }
 
+TEST (Test_avl_tree_, TestDoubleInsert)
+{
+    my::avl_tree_<int> tree;
+    for ( int i = 0; i < 10; i++ )
+        tree.insert (i);
+
+    auto old_size = tree.size ();
+
+    for ( int i = 0; i < 10; i++ )
+    {
+        ASSERT_THROW (tree.insert (i), std::out_of_range);
+        ASSERT_EQ (tree.size (), old_size);
+    }
+}
+
+TEST (Test_avl_tree_, TestDeleteWrong)
+{
+    my::avl_tree_<int> tree;
+    for ( int i = 0; i < 10; i++ )
+        tree.insert (i);
+
+    auto old_size = tree.size ();
+
+    for ( int i = -1; i < -10; i-- )
+    {
+        tree.insert (i);
+        ASSERT_EQ (tree.size (), old_size);
+    }
+}
+
+TEST (Test_avl_tree_, TestDeleteAll)
+{
+    my::avl_tree_<int> tree;
+
+    for ( int i = 0; i < 10; i++ )
+        tree.insert (i);
+
+    for ( int i = 0; i < 10; i++ )
+        ASSERT_NO_THROW (tree.erase (i));
+
+    ASSERT_EQ (tree.size (), 0);
+    ASSERT_TRUE (tree.empty ());
+}
+
 int main (int argc, char *argv[])
 {
     ::testing::InitGoogleTest (&argc, argv);
