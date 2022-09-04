@@ -27,18 +27,19 @@ namespace my
 //===============================avl_tree_node_base===============================
 struct avl_tree_node_base_
 {
-    using height_t    = int;
-    using base_ptr_   = avl_tree_node_base_ *;
-    using self_       = avl_tree_node_base_;
-    using owning_ptr_ = typename std::unique_ptr<self_>;
+    using height_diff_t = int;
+    using size_type     = std::size_t;
+    using base_ptr_     = avl_tree_node_base_ *;
+    using self_         = avl_tree_node_base_;
+    using owning_ptr_   = typename std::unique_ptr<self_>;
 
-    height_t m_bf_       = 0;
-    height_t m_size_     = 1;
+    height_diff_t m_bf_  = 0;
+    size_type m_size_    = 1;
     base_ptr_ m_parent_  = nullptr;
     owning_ptr_ m_left_  = nullptr;
     owning_ptr_ m_right_ = nullptr;
 
-    static height_t size (base_ptr_ node_) { return (node_ ? node_->m_size_ : 0); }
+    static size_type size (base_ptr_ node_) { return (node_ ? node_->m_size_ : 0); }
 
     base_ptr_ m_minimum_ () noexcept
     {
@@ -168,6 +169,7 @@ struct avl_tree_header_
     using base_ptr_   = typename avl_tree_node_base_::base_ptr_;
     using owning_ptr_ = typename avl_tree_node_base_::owning_ptr_;
     using base_node_  = avl_tree_node_base_;
+    using size_type   = typename avl_tree_node_base_::size_type;
 
     owning_ptr_ m_header_     = nullptr;
     base_ptr_ m_leftmost_     = nullptr;
@@ -207,12 +209,14 @@ struct avl_tree_impl_ : public avl_tree_key_compare_<Compare_>, public avl_tree_
 {
     using base_key_compare_ = avl_tree_key_compare_<Compare_>;
 
-    using base_ptr_   = typename avl_tree_node_base_::base_ptr_;
-    using owning_ptr_ = typename avl_tree_node_base_::owning_ptr_;
-    using link_type_  = avl_tree_node_<Key_> *;
-    using base_node_  = avl_tree_node_base_;
-    using node_       = avl_tree_node_<Key_>;
-    using key_type    = Key_;
+    using base_ptr_     = typename avl_tree_node_base_::base_ptr_;
+    using owning_ptr_   = typename avl_tree_node_base_::owning_ptr_;
+    using link_type_    = avl_tree_node_<Key_> *;
+    using base_node_    = avl_tree_node_base_;
+    using node_         = avl_tree_node_<Key_>;
+    using key_type      = Key_;
+    using size_type     = typename avl_tree_node_base_::size_type;
+    using height_diff_t = typename avl_tree_node_base_::height_diff_t;
 
     avl_tree_impl_ (const avl_tree_impl_ &x_)
         : base_key_compare_ (x_.m_key_compare_), avl_tree_header_ ()
@@ -236,6 +240,7 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
     using m_impl_ = avl_tree_impl_<Key_, Compare_>;
 
     using base_ptr_   = typename m_impl_::base_ptr_;
+    using base_node_  = typename m_impl_::base_node_;
     using link_type_  = typename m_impl_::link_type_;
     using owning_ptr_ = typename m_impl_::owning_ptr_;
 
@@ -306,11 +311,12 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
     };
 
   public:
-    using key_type   = Key_;
-    using value_type = Key_;
-    using pointer    = value_type *;
-    using reference  = value_type &;
-    using size_type  = std::size_t;
+    using key_type      = Key_;
+    using value_type    = Key_;
+    using pointer       = value_type *;
+    using reference     = value_type &;
+    using size_type     = typename m_impl_::size_type;
+    using height_diff_t = typename m_impl_::height_diff_t;
 
     using iterator         = avl_tree_iterator_;
     using reverse_iterator = std::reverse_iterator<iterator>;
@@ -361,8 +367,6 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
     reverse_iterator rend () noexcept { return reverse_iterator (begin ()); }
 
     size_type size () const noexcept { return m_impl_::m_node_count_; }
-
-    void swap (avl_tree_ &t_);
 
     bool empty () const noexcept { return (m_impl_::m_node_count_ == 0); }
 
