@@ -470,14 +470,31 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
     // return rank of node with key_.
     size_type m_get_rank_of_ (key_type key_);
 
-    const key_type closest_left (const key_type &k_)
+    // Return number of elements with the key less then the given one.
+    size_type m_get_number_less_then_ (key_type key_)
     {
-        base_ptr_ curr_  = m_impl_::m_root ();
+        if ( empty () )
+            return 0;
+
+        auto min_key_ = s_key_ (m_begin_ ());
+
+        if ( m_impl_::m_key_compare_ (key_, min_key_) || key_ == min_key_ )
+            return 0;
+
+        auto closest_left_ = closest_left (key_);
+        auto rank_         = m_get_rank_of_ (closest_left_);
+
+        return (closest_left_ == key_ ? rank_ - 1 : rank_);
+    }
+
+    key_type closest_left (const key_type &k_)
+    {
+        base_ptr_ curr_  = m_root_ ();
         base_ptr_ bound_ = nullptr;
 
         while ( curr_ )
         {
-            bool key_less = m_key_compare_ (k_, s_key_ (curr_));
+            bool key_less = m_impl_::m_key_compare_ (k_, s_key_ (curr_));
             if ( !key_less )
             {
                 bound_ = curr_;
@@ -489,17 +506,17 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
 
         if ( !bound_ )
             throw std::out_of_range ("Leftmost element has no predeccessor");
-        return static_cast<link_type_> (bound_)->m_key_;
+        return s_key_ (bound_);
     }
 
-    const key_type closest_right (const key_type &k_)
+    key_type closest_right (const key_type &k_)
     {
-        base_ptr_ curr_  = m_impl_::m_header_;
+        base_ptr_ curr_  = m_root_ ();
         base_ptr_ bound_ = nullptr;
 
         while ( curr_ )
         {
-            bool key_less = avl_tree_key_compare (k_, s_key_ (curr_));
+            bool key_less = m_impl_::m_key_compare_ (k_, s_key_ (curr_));
             if ( !key_less )
             {
                 curr_ = curr_->m_right ();
@@ -513,7 +530,7 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
 
         if ( !bound_ )
             throw std::out_of_range ("Rightmost element has no successor");
-        return static_cast<link_type_> (bound_)->m_key_;
+        return s_key_ (bound_);
     }
 
   private:
@@ -600,10 +617,10 @@ typename avl_tree_<Key_, Comp_>::size_type avl_tree_<Key_, Comp_>::m_get_rank_of
     auto node_ = find (key_).m_node_;
 
     if ( !node_ )
-        throw std::out_of_range ("Element is not inserted.");
+        throw std::out_of_range ("Element with the given key is not inserted.");
 
     /* The rank of node is the size of left subtree plus 1. */
-    size_type rank_ = base_node_::size (node_->m_left_) + 1;
+    size_type rank_ = base_node_::size (node_->m_left ()) + 1;
 
     while ( node_ != m_root_ () )
     {
@@ -640,6 +657,9 @@ avl_tree_<Key_, Comp_>::m_trav_bin_search_ (key_type key_, F step_)
         else
             curr_ = curr_->m_right ();
     }
+
+    if ( curr_ == m_root_ () )
+        step_ (curr_);
 
     return res_ (curr_, prev_, key_less_);
 }

@@ -14,7 +14,7 @@ TEST (Test_avl_tree_node_base_, Test_m_maximum_)
     head->m_right_->m_right_ = owning_ptr_ (new my::avl_tree_node_base_ {2});
 
     auto max = head->m_maximum_ ();
-    ASSERT_EQ (max->m_bf_, 2);
+    EXPECT_EQ (max->m_bf_, 2);
 }
 
 TEST (Test_avl_tree_node_base_, Test_m_minimum_)
@@ -26,7 +26,7 @@ TEST (Test_avl_tree_node_base_, Test_m_minimum_)
     head->m_left_->m_left_ = owning_ptr_ (new my::avl_tree_node_base_ {-2});
 
     auto max = head->m_minimum_ ();
-    ASSERT_EQ (max->m_bf_, -2);
+    EXPECT_EQ (max->m_bf_, -2);
 }
 
 TEST (Test_avl_tree_iterator_, TestCtorDeref)
@@ -35,7 +35,7 @@ TEST (Test_avl_tree_iterator_, TestCtorDeref)
 
     my::avl_tree_<int>::avl_tree_iterator_ pos (head);
 
-    ASSERT_EQ (*pos, 666);
+    EXPECT_EQ (*pos, 666);
 }
 
 struct entry
@@ -50,7 +50,7 @@ TEST (Test_avl_tree_iterator_, TestArrowOperator)
 
     my::avl_tree_<entry>::avl_tree_iterator_ pos (head);
 
-    ASSERT_EQ (pos->a, 9);
+    EXPECT_EQ (pos->a, 9);
 }
 
 TEST (Test_avl_tree_iterator_, TestPostIncrement)
@@ -64,11 +64,11 @@ TEST (Test_avl_tree_iterator_, TestPostIncrement)
 
     my::avl_tree_<int>::avl_tree_iterator_ head_pos (head);
 
-    ASSERT_EQ (*head_pos, 0);
+    EXPECT_EQ (*head_pos, 0);
 
-    ASSERT_EQ (*(head_pos++), 0);
+    EXPECT_EQ (*(head_pos++), 0);
 
-    ASSERT_EQ (*head_pos, 1);
+    EXPECT_EQ (*head_pos, 1);
 }
 
 TEST (Test_avl_tree_iterator_, TestPreIncrement)
@@ -82,18 +82,18 @@ TEST (Test_avl_tree_iterator_, TestPreIncrement)
 
     my::avl_tree_<int>::avl_tree_iterator_ head_pos (head);
 
-    ASSERT_EQ (*head_pos, 0);
+    EXPECT_EQ (*head_pos, 0);
 
-    ASSERT_EQ (*(++head_pos), 1);
+    EXPECT_EQ (*(++head_pos), 1);
 
-    ASSERT_EQ (*head_pos, 1);
+    EXPECT_EQ (*head_pos, 1);
 }
 
 TEST (Test_avl_tree_, TestInsert)
 {
     my::avl_tree_<int> tree;
     tree.insert (1);
-    ASSERT_EQ (*(tree.begin ()), 1);
+    EXPECT_EQ (*(tree.begin ()), 1);
 }
 
 TEST (Test_avl_tree_, TestEraseLastOne)
@@ -102,8 +102,8 @@ TEST (Test_avl_tree_, TestEraseLastOne)
     tree.insert (1);
     tree.erase (tree.begin ());
 
-    ASSERT_TRUE (tree.empty ());
-    ASSERT_EQ (tree.begin (), tree.end ());
+    EXPECT_TRUE (tree.empty ());
+    EXPECT_EQ (tree.begin (), tree.end ());
 }
 
 TEST (Test_avl_tree_, TestEraseLeftmost)
@@ -119,7 +119,7 @@ TEST (Test_avl_tree_, TestEraseLeftmost)
 
     EXPECT_EQ (*tree.begin (), 6);
     tree.erase (tree.begin ());
-    ASSERT_EQ (*tree.begin (), 7);
+    EXPECT_EQ (*tree.begin (), 7);
 }
 
 TEST (Test_avl_tree_, TestEraseRightmost)
@@ -139,7 +139,7 @@ TEST (Test_avl_tree_, TestEraseRightmost)
     tree.erase (last);
 
     last = std::prev (tree.end ());
-    ASSERT_EQ (*last, 9);
+    EXPECT_EQ (*last, 9);
 }
 
 TEST (Test_avl_tree_, TestEraseThroughTheKeyOnly)
@@ -148,7 +148,7 @@ TEST (Test_avl_tree_, TestEraseThroughTheKeyOnly)
     tree.insert (1);
     tree.erase (1);
 
-    ASSERT_TRUE (tree.empty ());
+    EXPECT_TRUE (tree.empty ());
 }
 
 TEST (Test_avl_tree_, TestEraseThroughTheKeyFirst)
@@ -161,8 +161,8 @@ TEST (Test_avl_tree_, TestEraseThroughTheKeyFirst)
     EXPECT_EQ (*tree.rbegin (), 2);
     tree.erase (1);
 
-    ASSERT_EQ (*tree.begin (), 2);
-    ASSERT_EQ (*tree.rbegin (), 2);
+    EXPECT_EQ (*tree.begin (), 2);
+    EXPECT_EQ (*tree.rbegin (), 2);
 }
 
 TEST (Test_avl_tree_, TestEraseThroughTheKeyLast)
@@ -175,8 +175,8 @@ TEST (Test_avl_tree_, TestEraseThroughTheKeyLast)
     EXPECT_EQ (*tree.rbegin (), 2);
     tree.erase (2);
 
-    ASSERT_EQ (*tree.begin (), 1);
-    ASSERT_EQ (*tree.rbegin (), 1);
+    EXPECT_EQ (*tree.begin (), 1);
+    EXPECT_EQ (*tree.rbegin (), 1);
 }
 
 TEST (Test_avl_tree_, TestDoubleInsert)
@@ -189,8 +189,8 @@ TEST (Test_avl_tree_, TestDoubleInsert)
 
     for ( int i = 0; i < 10; i++ )
     {
-        ASSERT_THROW (tree.insert (i), std::out_of_range);
-        ASSERT_EQ (tree.size (), old_size);
+        EXPECT_THROW (tree.insert (i), std::out_of_range);
+        EXPECT_EQ (tree.size (), old_size);
     }
 }
 
@@ -205,7 +205,7 @@ TEST (Test_avl_tree_, TestDeleteWrong)
     for ( int i = -1; i < -10; i-- )
     {
         tree.insert (i);
-        ASSERT_EQ (tree.size (), old_size);
+        EXPECT_EQ (tree.size (), old_size);
     }
 }
 
@@ -217,10 +217,10 @@ TEST (Test_avl_tree_, TestDeleteAll)
         tree.insert (i);
 
     for ( int i = 0; i < 10; i++ )
-        ASSERT_NO_THROW (tree.erase (i));
+        EXPECT_NO_THROW (tree.erase (i));
 
-    ASSERT_EQ (tree.size (), 0);
-    ASSERT_TRUE (tree.empty ());
+    EXPECT_EQ (tree.size (), 0);
+    EXPECT_TRUE (tree.empty ());
 }
 
 TEST (Test_avl_tree_, Test_select_1)
@@ -233,15 +233,15 @@ TEST (Test_avl_tree_, Test_select_1)
     for ( int i = 0; i < 5; i++ )
         tree.erase (i);
 
-    ASSERT_EQ (tree.m_os_select_ (1), 5);
-    ASSERT_EQ (tree.m_os_select_ (2), 6);
-    ASSERT_EQ (tree.m_os_select_ (3), 7);
-    ASSERT_EQ (tree.m_os_select_ (4), 8);
-    ASSERT_EQ (*tree.begin (), 5);
+    EXPECT_EQ (tree.m_os_select_ (1), 5);
+    EXPECT_EQ (tree.m_os_select_ (2), 6);
+    EXPECT_EQ (tree.m_os_select_ (3), 7);
+    EXPECT_EQ (tree.m_os_select_ (4), 8);
+    EXPECT_EQ (*tree.begin (), 5);
 
-    ASSERT_THROW (tree.m_os_select_ (0), std::out_of_range);
+    EXPECT_THROW (tree.m_os_select_ (0), std::out_of_range);
 
-    ASSERT_THROW (tree.m_os_select_ (10), std::out_of_range);
+    EXPECT_THROW (tree.m_os_select_ (10), std::out_of_range);
 }
 
 TEST (Test_avl_tree_, Test_select_2)
@@ -254,15 +254,49 @@ TEST (Test_avl_tree_, Test_select_2)
     for ( int i = 5; i <= 10; i++ )
         tree.erase (i);
 
-    ASSERT_EQ (tree.m_os_select_ (1), 1);
-    ASSERT_EQ (tree.m_os_select_ (2), 2);
-    ASSERT_EQ (tree.m_os_select_ (3), 3);
-    ASSERT_EQ (tree.m_os_select_ (4), 4);
-    ASSERT_EQ (*std::prev (tree.end ()), 4);
+    EXPECT_EQ (tree.m_os_select_ (1), 1);
+    EXPECT_EQ (tree.m_os_select_ (2), 2);
+    EXPECT_EQ (tree.m_os_select_ (3), 3);
+    EXPECT_EQ (tree.m_os_select_ (4), 4);
+    EXPECT_EQ (*std::prev (tree.end ()), 4);
 
-    ASSERT_THROW (tree.m_os_select_ (0), std::out_of_range);
+    EXPECT_THROW (tree.m_os_select_ (0), std::out_of_range);
 
-    ASSERT_THROW (tree.m_os_select_ (10), std::out_of_range);
+    EXPECT_THROW (tree.m_os_select_ (10), std::out_of_range);
+}
+
+TEST (Test_avl_tree_, Test_rank)
+{
+    my::avl_tree_<int> tree;
+
+    for ( int i = 1; i <= 10; i++ )
+        tree.insert (i);
+
+    tree.erase (1);
+    tree.erase (7);
+    tree.erase (4);
+
+    EXPECT_EQ (*tree.begin (), 2);
+    EXPECT_EQ (*std::prev (tree.end ()), 10);
+
+    EXPECT_EQ (tree.m_get_rank_of_ (10), 8);
+    EXPECT_EQ (tree.m_get_rank_of_ (2), 1);
+    EXPECT_EQ (tree.m_get_rank_of_ (3), 2);
+}
+
+TEST (Test_avl_tree_, Test_number_less_then)
+{
+    my::avl_tree_<int> tree;
+
+    for ( int i = 1; i <= 10; i++ )
+        tree.insert (i);
+
+    tree.erase (1);
+    tree.erase (7);
+    tree.erase (4);
+
+    EXPECT_EQ (tree.m_get_number_less_then_ (11), 8);
+    EXPECT_EQ (tree.m_get_number_less_then_ (4), 2);
 }
 
 int main (int argc, char *argv[])
