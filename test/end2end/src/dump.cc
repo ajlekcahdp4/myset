@@ -5,17 +5,22 @@
 int main ()
 {
     my::avl_tree_<int> tree;
-
-    for ( int i = 1; i <= 10; i++ )
+    for ( int i = 0; i < 10; i++ )
+    {
         tree.insert (i);
+        std::stringstream ss;
+        ss << "dump" << i;
+        tree.dump (ss.str ());
+    }
 
-    tree.dump ("dump1");
-    tree.erase (1);
-    tree.dump ("dump2");
-    tree.erase (7);
-    tree.dump ("dump3");
-    tree.erase (4);
-    tree.dump ("dump4");
+    for ( int i = 0; i < 5; i++ )
+    {
+        tree.erase (i);
+        std::stringstream ss;
+        ss << "dump_erase" << i;
+        tree.dump (ss.str ());
+    }
 
-    std::cout << tree.m_get_rank_of_ (10);
+    std::cout << "::" << tree.m_os_select_ (1) << " " << tree.m_os_select_ (2) << " "
+              << tree.m_os_select_ (3) << " " << tree.m_os_select_ (4);
 }

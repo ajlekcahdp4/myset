@@ -89,6 +89,60 @@ TEST (Test_avl_tree_iterator_, TestPreIncrement)
     EXPECT_EQ (*head_pos, 1);
 }
 
+TEST (Test_avl_tree_iterator_, TestPreDecrement)
+{
+    auto head       = new my::avl_tree_node_<int> (0);
+    head->m_parent_ = head;
+
+    auto new_node            = new my::avl_tree_node_<int> (-1);
+    head->m_left_            = owning_ptr_ (static_cast<base_ptr_> (new_node));
+    head->m_left_->m_parent_ = head;
+
+    my::avl_tree_<int>::avl_tree_iterator_ head_pos (head);
+
+    EXPECT_EQ (*head_pos, 0);
+
+    EXPECT_EQ (*(--head_pos), -1);
+
+    EXPECT_EQ (*head_pos, -1);
+}
+
+TEST (Test_avl_tree_iterator_, TestDecrement)
+{
+    my::avl_tree_<int> tree;
+
+    for ( int i = 1; i <= 10; i++ )
+        tree.insert (i);
+
+    tree.erase (1);
+    tree.erase (7);
+    tree.erase (4);
+
+    EXPECT_EQ (*(--tree.find (6)), 5);
+    EXPECT_EQ (*(--tree.find (8)), 6);
+    EXPECT_EQ (*(--tree.find (10)), 9);
+    EXPECT_EQ (*(--tree.find (11)), 10);
+    EXPECT_EQ (*(--tree.find (3)), 2);
+    EXPECT_EQ ((--tree.find (2)).m_node_, nullptr);
+}
+
+TEST (Test_avl_tree_iterator_, TestIncrement)
+{
+    my::avl_tree_<int> tree;
+
+    for ( int i = 1; i <= 10; i++ )
+        tree.insert (i);
+
+    tree.erase (1);
+    tree.erase (7);
+    tree.erase (4);
+
+    EXPECT_EQ (*(++tree.find (6)), 8);
+    EXPECT_EQ (*(++tree.find (8)), 9);
+    EXPECT_EQ ((++tree.find (10)).m_node_, nullptr);
+    EXPECT_EQ (*(++tree.find (3)), 5);
+}
+
 TEST (Test_avl_tree_, TestInsert)
 {
     my::avl_tree_<int> tree;
@@ -265,25 +319,6 @@ TEST (Test_avl_tree_, Test_select_2)
     EXPECT_THROW (tree.m_os_select_ (10), std::out_of_range);
 }
 
-TEST (Test_avl_tree_, Test_rank)
-{
-    my::avl_tree_<int> tree;
-
-    for ( int i = 1; i <= 10; i++ )
-        tree.insert (i);
-
-    tree.erase (1);
-    tree.erase (7);
-    tree.erase (4);
-
-    EXPECT_EQ (*tree.begin (), 2);
-    EXPECT_EQ (*std::prev (tree.end ()), 10);
-
-    EXPECT_EQ (tree.m_get_rank_of_ (10), 7);
-    EXPECT_EQ (tree.m_get_rank_of_ (2), 1);
-    EXPECT_EQ (tree.m_get_rank_of_ (3), 2);
-}
-
 TEST (Test_avl_tree_, Test_number_less_then)
 {
     my::avl_tree_<int> tree;
@@ -310,7 +345,7 @@ TEST (Test_avl_tree_, Test_lower_bound)
     tree.erase (7);
     tree.erase (4);
 
-    EXPECT_EQ (*tree.lower_bound (11), 10);
+    EXPECT_EQ (tree.lower_bound (11), tree.end ());
     EXPECT_EQ (*tree.lower_bound (2), 2);
     EXPECT_EQ (*tree.lower_bound (1), 2);
     EXPECT_EQ (*tree.lower_bound (-1), 2);
@@ -327,7 +362,7 @@ TEST (Test_avl_tree_, Test_upper_bound)
     tree.erase (7);
     tree.erase (4);
 
-    EXPECT_EQ (*tree.upper_bound (11), 10);
+    EXPECT_EQ (tree.upper_bound (11), tree.end ());
     EXPECT_EQ (*tree.upper_bound (2), 3);
     EXPECT_EQ (*tree.upper_bound (1), 2);
     EXPECT_EQ (*tree.upper_bound (-1), 2);
