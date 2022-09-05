@@ -401,11 +401,7 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
     // Rebalance subtree after insert.
     void m_rebalance_after_insert_ (base_ptr_ leaf_);
 
-    base_ptr_ m_erase_pos_ (iterator to_erase_pos_)
-    {
-        auto res_ = m_erase_pos_impl_ (to_erase_pos_);
-        return res_;
-    }
+    base_ptr_ m_erase_pos_ (iterator to_erase_pos_) { return m_erase_pos_impl_ (to_erase_pos_); }
 
     // Rebalance tree for erase.
     void m_rebalance_for_erase_ (base_ptr_ node_);
@@ -420,20 +416,33 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
         return iterator (std::get<0> (tuple_), this);
     }
 
+    iterator m_find_for_erase_ (const key_type &key_)
+    {
+        auto tuple_ = m_trav_bin_search_ (key_, [] (base_ptr_ &node_) { node_->m_size_--; });
+        auto node_  = std::get<0> (tuple_);
+
+        if ( node_ )
+            return iterator (node_, this);
+
+        m_trav_bin_search_ (key_, [] (base_ptr_ &node_) { node_->m_size_++; });
+        throw std::out_of_range ("No element with requested key for erase.");
+    }
+
     iterator insert (const key_type &key_) { return m_insert_ (key_); }
 
     bool erase (const key_type &key_)
     {
-        auto to_erase_pos_ = find (key_);
-        if ( to_erase_pos_ != end () )
-            return m_erase_pos_ (to_erase_pos_);
-        return false;
+        auto to_erase_pos_ = m_find_for_erase_ (key_);
+        return m_erase_pos_ (to_erase_pos_);
     }
 
-    void erase (iterator pos_)
+    void erase (iterator pos_)   // ???
     {
         if ( pos_ != end () )
+        {
+            m_trav_bin_search_ (*pos_, [] (base_ptr_ &node_) { node_->m_size_--; });
             m_erase_pos_ (pos_);
+        }
     }
 
     void clear () noexcept
@@ -457,6 +466,9 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
 
     // return key value of ith smallest element in AVL-tree
     key_type m_os_select_ (size_t i);
+
+    // return rank of node with key_.
+    size_type m_get_rank_of_ (key_type key_);
 
     const key_type closest_left (const key_type &k_)
     {
@@ -582,6 +594,26 @@ typename avl_tree_<Key_, Comp_>::key_type avl_tree_<Key_, Comp_>::m_os_select_ (
 
     return s_key_ (curr_);
 }
+template <typename Key_, typename Comp_>
+typename avl_tree_<Key_, Comp_>::size_type avl_tree_<Key_, Comp_>::m_get_rank_of_ (key_type key_)
+{
+    auto node_ = find (key_).m_node_;
+
+    if ( !node_ )
+        throw std::out_of_range ("Element is not inserted.");
+
+    /* The rank of node is the size of left subtree plus 1. */
+    size_type rank_ = base_node_::size (node_->m_left_) + 1;
+
+    while ( node_ != m_root_ () )
+    {
+        if ( !node_->is_left_child_ () )
+            rank_ += base_node_::size (node_->m_parent_->m_left ()) + 1;
+        node_ = node_->m_parent_;
+    }
+
+    return rank_;
+}
 
 template <typename Key_, typename Comp_>
 template <typename F>
@@ -598,7 +630,7 @@ avl_tree_<Key_, Comp_>::m_trav_bin_search_ (key_type key_, F step_)
 
     bool key_less_ {};
 
-    while ( curr_ && static_cast<link_type_> (curr_)->m_key_ != key_ )
+    while ( curr_ && s_key_ (curr_) != key_ )
     {
         key_less_ = m_impl_::m_key_compare_ (key_, s_key_ (curr_));
         step_ (curr_);
@@ -682,6 +714,8 @@ typename avl_tree_<Key_, Comp_>::base_ptr_ avl_tree_<Key_, Comp_>::m_erase_pos_i
         std::swap (s_key_ (target_), s_key_ (to_erase_));
     }
 
+    target_->m_size_--;
+
     /* rebalancing target subtree */
     m_rebalance_for_erase_ (target_);
 
@@ -690,10 +724,12 @@ typename avl_tree_<Key_, Comp_>::base_ptr_ avl_tree_<Key_, Comp_>::m_erase_pos_i
     if ( child_u_ptr_ )
         child_u_ptr_->m_parent_ = target_->m_parent_;
 
+    auto t_parent_ = target_->m_parent_;
+
     if ( target_->is_left_child_ () )
-        target_->m_parent_->m_left_ = std::move (child_u_ptr_);
+        t_parent_->m_left_ = std::move (child_u_ptr_);
     else
-        target_->m_parent_->m_right_ = std::move (child_u_ptr_);
+        t_parent_->m_right_ = std::move (child_u_ptr_);
 
     return target_;
 }
