@@ -66,8 +66,20 @@ struct avl_tree_node_base_
         auto curr_ = this;
 
         if ( m_left_ )
-            /* move down until we find it. */
-            return m_left_->m_minimum_ ();
+        {
+            /*
+             * Move down until we find it.
+             * Also have to decrease ich node size.
+             */
+
+            curr_ = m_left ();
+            while ( curr_->m_right_ )
+            {
+                curr_->m_size_--;
+                curr_ = curr_->m_right ();
+            }
+            return curr_;
+        }
 
         /* move up until we find it or reach the root. */
         for ( ; curr_->m_parent_->m_parent_ && curr_->is_left_child_ (); curr_ = curr_->m_parent_ )
@@ -88,8 +100,20 @@ struct avl_tree_node_base_
         auto curr_ = this;
 
         if ( m_right_ )
-            /* move down until we find it. */
-            return m_right_->m_minimum_ ();
+        {
+            /*
+             * Move down until we find it.
+             * Also have to decrease ich node size.
+             */
+
+            curr_ = m_right ();
+            while ( curr_->m_left_ )
+            {
+                curr_->m_size_--;
+                curr_ = curr_->m_left ();
+            }
+            return curr_;
+        }
 
         /* move up until we find it or reach the root. */
         for ( ; curr_->m_parent_->m_parent_ && !curr_->is_left_child_ (); curr_ = curr_->m_parent_ )
@@ -337,9 +361,9 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
 
     link_type_ m_copy_ (const avl_tree_ &tree_);
 
-    iterator m_lower_bound_ (link_type_ x_, base_ptr_ y_, const key_type &k_);
+    iterator m_lower_bound_ (base_ptr_ x_, base_ptr_ y_, const key_type &k_);
 
-    iterator m_upper_bound_ (link_type_ x_, base_ptr_ y_, const key_type &k_);
+    iterator m_upper_bound_ (base_ptr_ x_, base_ptr_ y_, const key_type &k_);
 
     static key_type &s_key_ (base_ptr_ node_) { return static_cast<link_type_> (node_)->m_key_; }
 
@@ -454,15 +478,9 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
     // Set operations.
     size_type count (const key_type &k_) const;
 
-    iterator lower_bound (const key_type &k_)
-    {
-        return m_lower_bound_ (m_begin_ (), m_end_ (), k_);
-    }
+    iterator lower_bound (const key_type &k_) { return m_lower_bound_ (m_root_ (), m_end_ (), k_); }
 
-    iterator upper_bound (const key_type &k_)
-    {
-        return m_upper_bound_ (m_begin_ (), m_end_ (), k_);
-    }
+    iterator upper_bound (const key_type &k_) { return m_upper_bound_ (m_root_ (), m_end_ (), k_); }
 
     // return key value of ith smallest element in AVL-tree
     key_type m_os_select_ (size_t i);
@@ -894,11 +912,11 @@ void avl_tree_<Key_, Comp_>::m_rebalance_for_erase_ (base_ptr_ node_)
 // Accessors.
 template <typename Key_, typename Comp_>
 typename avl_tree_<Key_, Comp_>::iterator
-avl_tree_<Key_, Comp_>::m_lower_bound_ (link_type_ x_, base_ptr_ y_, const key_type &k_)
+avl_tree_<Key_, Comp_>::m_lower_bound_ (base_ptr_ x_, base_ptr_ y_, const key_type &k_)
 {
     while ( x_ )
     {
-        bool key_bigger_ = m_impl_::m_key_compare_ (x_->m_key_, k_);
+        bool key_bigger_ = m_impl_::m_key_compare_ (s_key_ (x_), k_);
         if ( !key_bigger_ )
         {
             y_ = x_;
@@ -912,11 +930,11 @@ avl_tree_<Key_, Comp_>::m_lower_bound_ (link_type_ x_, base_ptr_ y_, const key_t
 
 template <typename Key_, typename Comp_>
 typename avl_tree_<Key_, Comp_>::iterator
-avl_tree_<Key_, Comp_>::m_upper_bound_ (link_type_ x_, base_ptr_ y_, const key_type &k_)
+avl_tree_<Key_, Comp_>::m_upper_bound_ (base_ptr_ x_, base_ptr_ y_, const key_type &k_)
 {
     while ( x_ )
     {
-        bool key_less_ = m_impl_::key_compare_ (k_, x_->m_key_);
+        bool key_less_ = m_impl_::m_key_compare_ (k_, s_key_ (x_));
         if ( key_less_ )
         {
             y_ = x_;
