@@ -17,53 +17,43 @@ typename avl_tree_node_base_::base_ptr_ avl_tree_node_base_::avl_tree_increment_
 {
     auto curr_ = this;
     if ( curr_->m_right_ )
+
+        return curr_->m_right_->m_minimum_ ();
+
+    base_ptr_ prev_ = curr_->m_parent_;
+
+    /*       while not root      */
+    while ( prev_->m_parent_ && !curr_->is_left_child_ () )
     {
-        curr_ = curr_->m_right_->m_minimum_ ();
+        curr_ = prev_;
+        prev_ = prev_->m_parent_;
     }
+    if ( prev_->m_parent_ )
+        curr_ = prev_;
     else
-    {
-        base_ptr_ prev_ = curr_->m_parent_;
-        assert (prev_);
-        /*       while not root      */
-        while ( prev_->m_parent_ && curr_ == prev_->m_right () )
-        {
-            curr_ = prev_;
-            prev_ = prev_->m_parent_;
-        }
-        if ( prev_->m_parent_ )
-            curr_ = prev_;
-        else
-            curr_ = nullptr;
-    }
+        curr_ = nullptr;
     return curr_;
 }
 
 typename avl_tree_node_base_::base_ptr_ avl_tree_node_base_::avl_tree_decrement_ () noexcept
 {
     auto curr_ = this;
-    if ( curr_->m_parent_ )
+
+    if ( curr_->m_left_ )
+        return curr_->m_left_->m_maximum_ ();
+
+    base_ptr_ prev_ = curr_->m_parent_;
+    /*       while not root      */
+    while ( prev_->m_parent_ && curr_ == prev_->m_left () )
     {
-        curr_ = curr_->m_right ();
+        curr_ = prev_;
+        prev_ = prev_->m_parent_;
     }
-    else if ( curr_->m_left_ )
-    {
-        base_ptr_ prev_ = curr_->m_left_->m_maximum_ ();
-        curr_           = prev_;
-    }
+    if ( prev_->m_parent_ )
+        curr_ = prev_;
     else
-    {
-        base_ptr_ prev_ = curr_->m_parent_;
-        /*       while not root      */
-        while ( prev_->m_parent_ && curr_ == prev_->m_left () )
-        {
-            curr_ = prev_;
-            prev_ = prev_->m_parent_;
-        }
-        if ( prev_->m_parent_ )
-            curr_ = prev_;
-        else
-            curr_ = nullptr;
-    }
+        curr_ = nullptr;
+
     return curr_;
 }
 
