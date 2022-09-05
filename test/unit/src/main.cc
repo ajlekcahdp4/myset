@@ -279,7 +279,7 @@ TEST (Test_avl_tree_, Test_rank)
     EXPECT_EQ (*tree.begin (), 2);
     EXPECT_EQ (*std::prev (tree.end ()), 10);
 
-    EXPECT_EQ (tree.m_get_rank_of_ (10), 8);
+    EXPECT_EQ (tree.m_get_rank_of_ (10), 7);
     EXPECT_EQ (tree.m_get_rank_of_ (2), 1);
     EXPECT_EQ (tree.m_get_rank_of_ (3), 2);
 }
@@ -295,8 +295,42 @@ TEST (Test_avl_tree_, Test_number_less_then)
     tree.erase (7);
     tree.erase (4);
 
-    EXPECT_EQ (tree.m_get_number_less_then_ (11), 8);
+    EXPECT_EQ (tree.m_get_number_less_then_ (11), 7);
     EXPECT_EQ (tree.m_get_number_less_then_ (4), 2);
+}
+
+TEST (Test_avl_tree_, Test_lower_bound)
+{
+    my::avl_tree_<int> tree;
+
+    for ( int i = 1; i <= 10; i++ )
+        tree.insert (i);
+
+    tree.erase (1);
+    tree.erase (7);
+    tree.erase (4);
+
+    EXPECT_EQ (*tree.lower_bound (11), 10);
+    EXPECT_EQ (*tree.lower_bound (2), 2);
+    EXPECT_EQ (*tree.lower_bound (1), 2);
+    EXPECT_EQ (*tree.lower_bound (-1), 2);
+}
+
+TEST (Test_avl_tree_, Test_upper_bound)
+{
+    my::avl_tree_<int> tree;
+
+    for ( int i = 1; i <= 10; i++ )
+        tree.insert (i);
+
+    tree.erase (1);
+    tree.erase (7);
+    tree.erase (4);
+
+    EXPECT_EQ (*tree.upper_bound (11), 10);
+    EXPECT_EQ (*tree.upper_bound (2), 3);
+    EXPECT_EQ (*tree.upper_bound (1), 2);
+    EXPECT_EQ (*tree.upper_bound (-1), 2);
 }
 
 int main (int argc, char *argv[])
