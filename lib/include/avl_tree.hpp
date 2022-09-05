@@ -478,15 +478,15 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
     // Set operations.
     size_type count (const key_type &k_) const;
 
-    iterator lower_bound (const key_type &k_) { return m_lower_bound_ (m_root_ (), m_end_ (), k_); }
+    iterator lower_bound (const key_type &k_) { return m_lower_bound_ (m_root_ (), nullptr, k_); }
 
-    iterator upper_bound (const key_type &k_) { return m_upper_bound_ (m_root_ (), m_end_ (), k_); }
+    iterator upper_bound (const key_type &k_) { return m_upper_bound_ (m_root_ (), nullptr, k_); }
 
     // return key value of ith smallest element in AVL-tree
     key_type m_os_select_ (size_t i);
 
-    // return rank of node with key_.
-    size_type m_get_rank_of_ (key_type key_);
+    // return the rank of the node with matching key_
+    size_type m_get_rank_of_ (iterator pos_);
 
     // Return number of elements with the key less then the given one.
     size_type m_get_number_less_then_ (key_type key_)
@@ -496,59 +496,17 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
 
         auto min_key_ = s_key_ (m_begin_ ());
 
+        std::cerr << min_key_ << " " << key_ << std::endl;
+
         if ( m_impl_::m_key_compare_ (key_, min_key_) || key_ == min_key_ )
             return 0;
 
-        auto closest_left_ = closest_left (key_);
-        auto rank_         = m_get_rank_of_ (closest_left_);
+        /* Previous element exists. */
+        auto closest_left_ = --upper_bound (key_);
 
-        return (closest_left_ == key_ ? rank_ - 1 : rank_);
-    }
+        auto rank_ = m_get_rank_of_ (closest_left_);
 
-    key_type closest_left (const key_type &k_)
-    {
-        base_ptr_ curr_  = m_root_ ();
-        base_ptr_ bound_ = nullptr;
-
-        while ( curr_ )
-        {
-            bool key_less = m_impl_::m_key_compare_ (k_, s_key_ (curr_));
-            if ( !key_less )
-            {
-                bound_ = curr_;
-                curr_  = curr_->m_right ();
-            }
-            else
-                curr_ = curr_->m_left ();
-        }
-
-        if ( !bound_ )
-            throw std::out_of_range ("Leftmost element has no predeccessor");
-        return s_key_ (bound_);
-    }
-
-    key_type closest_right (const key_type &k_)
-    {
-        base_ptr_ curr_  = m_root_ ();
-        base_ptr_ bound_ = nullptr;
-
-        while ( curr_ )
-        {
-            bool key_less = m_impl_::m_key_compare_ (k_, s_key_ (curr_));
-            if ( !key_less )
-            {
-                curr_ = curr_->m_right ();
-            }
-            else
-            {
-                bound_ = curr_;
-                curr_  = curr_->m_left ();
-            }
-        }
-
-        if ( !bound_ )
-            throw std::out_of_range ("Rightmost element has no successor");
-        return s_key_ (bound_);
+        return (*closest_left_ == key_ ? rank_ - 1 : rank_);
     }
 
   private:
@@ -630,12 +588,12 @@ typename avl_tree_<Key_, Comp_>::key_type avl_tree_<Key_, Comp_>::m_os_select_ (
     return s_key_ (curr_);
 }
 template <typename Key_, typename Comp_>
-typename avl_tree_<Key_, Comp_>::size_type avl_tree_<Key_, Comp_>::m_get_rank_of_ (key_type key_)
+typename avl_tree_<Key_, Comp_>::size_type avl_tree_<Key_, Comp_>::m_get_rank_of_ (iterator pos_)
 {
-    auto node_ = find (key_).m_node_;
-
-    if ( !node_ )
+    if ( pos_ == end () )
         throw std::out_of_range ("Element with the given key is not inserted.");
+
+    auto node_ = pos_.m_node_;
 
     /* The rank of node is the size of left subtree plus 1. */
     size_type rank_ = base_node_::size (node_->m_left ()) + 1;
