@@ -405,6 +405,67 @@ TEST (Test_avl_tree_, Test_clear)
     EXPECT_EQ (tree.begin ().m_node_, tree.end ().m_node_);
 }
 
+TEST (Test_avl_tree_, Test_equal_1)
+{
+    my::avl_tree_<int> tree1;
+
+    for ( int i = 1; i <= 10; i++ )
+        tree1.insert (i);
+
+    tree1.erase (1);
+    tree1.erase (7);
+    tree1.erase (4);
+
+    my::avl_tree_<int> tree2;
+
+    for ( int i = 1; i <= 10; i++ )
+        tree2.insert (i);
+
+    tree2.erase (1);
+    tree2.erase (4);
+
+    my::avl_tree_<int> tree3;
+
+    for ( int i = 1; i <= 10; i++ )
+        tree3.insert (i);
+
+    tree3.erase (1);
+    tree3.erase (7);
+    tree3.erase (5);
+
+    EXPECT_FALSE (tree1 == tree2);
+    EXPECT_FALSE (tree1 == tree3);
+    EXPECT_FALSE (tree2 == tree3);
+
+    EXPECT_TRUE (tree1 != tree2);
+    EXPECT_TRUE (tree1 != tree3);
+    EXPECT_TRUE (tree2 != tree3);
+}
+
+TEST (Test_avl_tree_, Test_equal_2)
+{
+    my::avl_tree_<int> tree1;
+
+    for ( int i = 1; i <= 10; i++ )
+        tree1.insert (i);
+
+    tree1.erase (1);
+    tree1.erase (7);
+    tree1.erase (4);
+
+    my::avl_tree_<int> tree2;
+
+    for ( int i = 1; i <= 10; i++ )
+        tree2.insert (i);
+
+    tree2.erase (1);
+    tree2.erase (7);
+    tree2.erase (4);
+
+    EXPECT_TRUE (tree1 == tree2);
+    EXPECT_FALSE (tree1 != tree2);
+}
+
 int main (int argc, char *argv[])
 {
     ::testing::InitGoogleTest (&argc, argv);

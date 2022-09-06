@@ -483,12 +483,12 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
     }
 
   private:
-    // Move elements from container.
-
     friend bool operator== (const avl_tree_ &x_, const avl_tree_ &y_)
     {
         return x_.size () == y_.size () && std::equal (x_.begin (), x_.end (), y_.begin ());
     }
+
+    friend bool operator!= (const avl_tree_ &x_, const avl_tree_ &y_) { return !(x_ == y_); }
 
   public:
     void dump (std::string filename) const
