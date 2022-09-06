@@ -368,6 +368,43 @@ TEST (Test_avl_tree_, Test_upper_bound)
     EXPECT_EQ (*tree.upper_bound (-1), 2);
 }
 
+TEST (Test_avl_tree_, Test_range_for)
+{
+    my::avl_tree_<int> tree;
+
+    for ( int i = 1; i <= 10; i++ )
+        tree.insert (i);
+
+    tree.erase (1);
+    tree.erase (7);
+    tree.erase (4);
+
+    std::vector<int> v {10, 9, 8, 6, 5, 3, 2};
+
+    for ( auto &i : tree )
+    {
+        EXPECT_EQ (i, v.back ());
+        v.pop_back ();
+    }
+}
+
+TEST (Test_avl_tree_, Test_clear)
+{
+    my::avl_tree_<int> tree;
+
+    for ( int i = 1; i <= 10; i++ )
+        tree.insert (i);
+
+    tree.erase (1);
+    tree.erase (7);
+    tree.erase (4);
+
+    tree.clear ();
+
+    EXPECT_TRUE (tree.empty ());
+    EXPECT_EQ (tree.begin ().m_node_, tree.end ().m_node_);
+}
+
 int main (int argc, char *argv[])
 {
     ::testing::InitGoogleTest (&argc, argv);

@@ -145,19 +145,10 @@ struct avl_tree_node_base_
 
     base_ptr_ rotate_left_ ();
     base_ptr_ rotate_right_ ();
-    void rotate_with_parent_ (base_ptr_ node_);
 
     bool is_left_child_ () const noexcept
     {
         return (m_parent_ ? this == m_parent_->m_left () : false);
-    }
-
-    owning_ptr_ move_ ()
-    {
-
-        if ( is_left_child_ () )
-            return std::move (m_parent_->m_left_);
-        return std::move (m_parent_->m_right_);
     }
 };
 
@@ -166,11 +157,7 @@ template <class key_compare_> struct avl_tree_key_compare_
 {
     key_compare_ m_key_compare_;
 
-    avl_tree_key_compare_ () : m_key_compare_ () {}
-
     avl_tree_key_compare_ (const key_compare_ &comp_) : m_key_compare_ (comp_) {}
-
-    avl_tree_key_compare_ (avl_tree_key_compare_ &&x_) : m_key_compare_ (x_.m_key_compare_) {}
 
     template <typename Key_> bool operator() (const Key_ &k1_, const Key_ &k2_)
     {
@@ -183,8 +170,6 @@ template <typename val_> struct avl_tree_node_ : public avl_tree_node_base_
 {
     using link_type_ = avl_tree_node_<val_>;
     using node_ptr_  = link_type_ *;
-
-    avl_tree_node_ () : avl_tree_node_base_ () {}
 
     avl_tree_node_ (val_ x_) : avl_tree_node_base_ (), m_key_ (x_) {}
 
@@ -224,7 +209,8 @@ struct avl_tree_header_
         m_header_->m_parent_ = nullptr;
         m_leftmost_          = nullptr;
         m_rightmost_         = nullptr;
-        m_header_->m_left_   = nullptr;
+        /* delete tree of unique pointers if any*/
+        m_header_->m_left_.release ();
     }
 };
 
@@ -248,14 +234,7 @@ struct avl_tree_impl_ : public avl_tree_key_compare_<Compare_>, public avl_tree_
     {
     }
 
-    avl_tree_impl_ () : base_key_compare_ (Compare_ {}), avl_tree_header_ () {}
-
     avl_tree_impl_ (const Compare_ &comp_) : base_key_compare_ (comp_), avl_tree_header_ () {}
-
-    avl_tree_impl_ (avl_tree_impl_ &&x_) noexcept
-        : base_key_compare_ (std::move (x_)), avl_tree_header_ (std::move (x_))
-    {
-    }
 };
 
 //=================================avl_tree_=======================================
@@ -469,15 +448,9 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
         }
     }
 
-    void clear () noexcept
-    {
-        m_erase_ (m_begin_ ());
-        m_impl_::m_reset_ ();
-    }
+    void clear () noexcept { m_impl_::m_reset_ (); }
 
     // Set operations.
-    size_type count (const key_type &k_) const;
-
     iterator lower_bound (const key_type &k_) { return m_lower_bound_ (m_root_ (), nullptr, k_); }
 
     iterator upper_bound (const key_type &k_) { return m_upper_bound_ (m_root_ (), nullptr, k_); }
@@ -511,7 +484,6 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
 
   private:
     // Move elements from container.
-    void m_move_data_ (avl_tree_ &tree_);
 
     friend bool operator== (const avl_tree_ &x_, const avl_tree_ &y_)
     {
@@ -553,12 +525,6 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
         p_stream << "}\n";
     }
 };
-
-template <typename Key_, typename Val_, typename Comp_>
-void swap (avl_tree_<Key_, Comp_> &x_, avl_tree_<Key_, Comp_> &y_)
-{
-    x_.swap (y_);
-}
 
 template <typename Key_, typename Comp_>
 typename avl_tree_<Key_, Comp_>::key_type avl_tree_<Key_, Comp_>::m_os_select_ (size_t i)
