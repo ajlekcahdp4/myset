@@ -2,6 +2,8 @@
 
 set (UNITT_SOURCES
     src/main.cc
+    src/test_avl_tree.cc
+    src/test_set.cc
 )
 
 add_executable(unitt ${UNITT_SOURCES})

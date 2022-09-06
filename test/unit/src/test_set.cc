@@ -7,10 +7,22 @@
  * ----------------------------------------------------------------------------
  */
 
+#include "myset.hpp"
 #include <gtest/gtest.h>
 
-int main (int argc, char *argv[])
+TEST (Test_set, Test_insert_1)
 {
-    ::testing::InitGoogleTest (&argc, argv);
-    return RUN_ALL_TESTS ();
+    my::set<int> set;
+    std::vector<int> v {10, 9, 8, 7, 6, 5, 4, 3, 2, 1};
+
+    for ( auto &i : v )
+        set.insert (i);
+
+    EXPECT_EQ (set.size (), v.size ());
+
+    for ( auto &i : set )
+    {
+        EXPECT_EQ (i, v.back ());
+        v.pop_back ();
+    }
 }
