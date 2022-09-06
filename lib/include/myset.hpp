@@ -11,13 +11,22 @@
 
 #pragma once
 
-#include <algorithm>
-#include <cassert>
-#include <cstddef>
-#include <iostream>
-#include <iterator>
-#include <memory>
-#include <utility>
+#include "avl_tree.hpp"
 namespace my
 {
+template <typename Key_, typename Compare_ = std::less<Key_>>
+class set : public avl_tree_<Key_, Compare_>
+{
+  private:
+    using tree_impl_ = avl_tree_<Key_, Compare_>;
+
+  public:
+    using key_type         = typename tree_impl_::key_type;
+    using reference        = typename tree_impl_::reference;
+    using pointer          = typename tree_impl_::pointer;
+    using size_type        = typename tree_impl_::size_type;
+    using iterator         = typename tree_impl_::iterator;
+    using reverse_iterator = typename tree_impl_::reverse_iterator;
+};
+
 }   // namespace my
