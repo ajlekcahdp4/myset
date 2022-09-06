@@ -456,7 +456,7 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
     iterator upper_bound (const key_type &k_) { return m_upper_bound_ (m_root_ (), nullptr, k_); }
 
     // return key value of ith smallest element in AVL-tree
-    key_type m_os_select_ (size_t i);
+    key_type m_os_select_ (size_type i);
 
     // return the rank of the node with matching key_
     size_type m_get_rank_of_ (iterator pos_);
@@ -491,6 +491,10 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
     friend bool operator!= (const avl_tree_ &x_, const avl_tree_ &y_) { return !(x_ == y_); }
 
   public:
+    key_type os_select (size_type i) { return m_os_select_ (i); }
+
+    size_type get_number_less_then (key_type key_) { return m_get_number_less_then_ (key_); }
+
     void dump (std::string filename) const
     {
         std::ofstream p_stream {filename};
@@ -527,7 +531,7 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
 };
 
 template <typename Key_, typename Comp_>
-typename avl_tree_<Key_, Comp_>::key_type avl_tree_<Key_, Comp_>::m_os_select_ (size_t i)
+typename avl_tree_<Key_, Comp_>::key_type avl_tree_<Key_, Comp_>::m_os_select_ (size_type i)
 {
     if ( i > size () || !i )
         throw std::out_of_range ("i is greater then the size of the tree or zero.");
