@@ -469,8 +469,6 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
 
         auto min_key_ = s_key_ (m_begin_ ());
 
-        std::cerr << min_key_ << " " << key_ << std::endl;
-
         if ( m_impl_::m_key_compare_ (key_, min_key_) || key_ == min_key_ )
             return 0;
 
