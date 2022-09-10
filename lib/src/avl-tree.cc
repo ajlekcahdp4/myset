@@ -81,7 +81,7 @@ avl_tree_node_base_::base_ptr_ avl_tree_node_base_::m_fix_left_imbalance_insert_
         }
         else if ( old_bf_ == 1 )
         {
-            curr_->m_left_->m_bf_  = -1;
+            curr_->m_left_->m_bf_  = 0;
             curr_->m_right_->m_bf_ = 0;
         }
         else if ( old_bf_ == 0 )
@@ -119,7 +119,7 @@ avl_tree_node_base_::base_ptr_ avl_tree_node_base_::m_fix_right_imbalance_insert
         }
         else if ( old_bf_ == 1 )
         {
-            curr_->m_left_->m_bf_  = -1;
+            curr_->m_left_->m_bf_  = 0;
             curr_->m_right_->m_bf_ = 0;
         }
         else if ( old_bf_ == 0 )
