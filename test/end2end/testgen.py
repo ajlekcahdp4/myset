@@ -13,6 +13,7 @@ from cgi import test
 import os
 import json
 import numpy as np
+import random
 
 usage_string = "gentest.py -n <num> -o output"
 
@@ -25,7 +26,7 @@ def number_less_then (elements: list, num: int):
             break
     return cnt
 
-def save_test (path: str, test: str, ans: str, idx: int, test_fmt: str = 'test{}.dat', ans_fmt: str = 'answ{}.dat') -> None:
+def save_test (path: str, test: str, ans: str, idx: int, test_fmt: str = 'test{}.dat', ans_fmt: str = 'test{}.dat.ans') -> None:
     with open (os.path.join(path, test_fmt.format (idx)), 'w') as test_file:
         test_file.write(test)
     with open (os.path.join(path, ans_fmt.format (idx)), 'w') as test_file:
@@ -37,9 +38,7 @@ def generate_random_test (config: dict):
         config['elements']['min'], config['elements']['max']
     )
 
-    elements = list (np.random.default_rng().integers(
-        config['integers']['min'], config['integers']['max'], length
-    ))
+    elements = random.sample(range(config["integers"]["min"], config["integers"]["max"]), length)
 
     length = len(elements)
 
@@ -57,8 +56,8 @@ def generate_random_test (config: dict):
     ans_str = ''
     for i in range (queries_kth_cnt):
         index = np.random.default_rng().integers(1, length)
-        ans_str += ' {}'.format(elements[index - 1])
-        test_str += ' m {}'.format(index)
+        ans_str += '{} '.format(elements[index - 1])
+        test_str += 'm {} '.format(index)
     
     queries_less_cnt = np.random.default_rng().integers (
         config['less_queries']['min'], config['less_queries']['max']
@@ -66,8 +65,8 @@ def generate_random_test (config: dict):
 
     for i in range (queries_kth_cnt):
         key = np.random.default_rng().integers(elements[0], elements[-1])
-        ans_str += ' {}'.format(number_less_then (elements, key))
-        test_str += ' n {}'.format(key)
+        ans_str += '{} '.format(number_less_then (elements, key))
+        test_str += 'n {} '.format(key)
 
     return [test_str, ans_str]
 
