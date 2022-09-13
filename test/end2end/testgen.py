@@ -75,7 +75,7 @@ def generate_random_test (config: dict):
 def generate_tests (config: dict):
     # Create output directory if it does not exists
     os.makedirs(config['output_path'], exist_ok=True)
-    number = int(config['number'])
+    number = config['number']
 
     for i in range (number):
         test = generate_random_test (config)

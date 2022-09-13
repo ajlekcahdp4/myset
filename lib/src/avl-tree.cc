@@ -107,7 +107,7 @@ avl_tree_node_base_::base_ptr_ avl_tree_node_base_::m_fix_right_imbalance_insert
     }
     else
     {
-        auto old_bf_ = curr_->m_bf_;
+        auto old_bf_ = curr_->m_right_->m_left_->m_bf_;
         curr_->m_right_->rotate_right_ ();
         curr_        = curr_->rotate_left_ ();
         curr_->m_bf_ = 0;
