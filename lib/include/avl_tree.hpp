@@ -272,7 +272,7 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
 
         pointer get () { return &(static_cast<link_type_> (m_node_)->m_key_); }
 
-        pointer operator-> () { return get (); }
+        pointer operator->() { return get (); }
 
         self_ &operator++ () noexcept   // pre-increment
         {
@@ -638,7 +638,7 @@ avl_tree_<Key_, Comp_>::m_insert_node_ (owning_ptr_ to_insert_)
     }
     to_insert_->m_parent_ = prev;
 
-    if ( prev_greater )
+    if ( prev == m_impl_::m_header_.get () || prev_greater )
     {
         prev->m_left_ = std::move (to_insert_);
         if ( prev == m_impl_::m_leftmost_ )
