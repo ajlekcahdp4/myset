@@ -6,7 +6,6 @@ template class my::set<int>;
 
 int main ()
 {
-    int i {};
     my::set<int> set_ {};
     bool not_end = true;
 
@@ -17,10 +16,6 @@ int main ()
 
         if ( !(std::cin >> query_type >> key) )
             break;
-
-        std::stringstream ss {};
-        ss << "dump" << ++i;
-        set_.dump (ss.str ());
         switch ( query_type )
         {
         case 'k':
