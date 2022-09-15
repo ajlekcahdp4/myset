@@ -239,7 +239,7 @@ struct avl_tree_impl_ : public avl_tree_key_compare_<Compare_>, public avl_tree_
 
 //=================================avl_tree_=======================================
 template <typename Key_, class Compare_ = std::less<Key_>>
-struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
+struct avl_tree_ : private avl_tree_impl_<Key_, Compare_>
 {
     using m_impl_ = avl_tree_impl_<Key_, Compare_>;
 
