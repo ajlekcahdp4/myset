@@ -61,73 +61,9 @@ struct avl_tree_node_base_
         return x_;
     }
 
-    base_ptr_ m_predecessor_for_erase_ () noexcept
-    {
-        auto curr_ = this;
+    base_ptr_ m_predecessor_for_erase_ () noexcept;
 
-        if ( m_left_ )
-        {
-            /*
-             * Move down until we find it.
-             * Also have to decrease ich node size.
-             */
-
-            curr_ = m_left ();
-            while ( curr_->m_right_ )
-            {
-                curr_->m_size_--;
-                curr_ = curr_->m_right ();
-            }
-            return curr_;
-        }
-
-        /* move up until we find it or reach the root. */
-        for ( ; curr_->m_parent_->m_parent_ && curr_->is_left_child_ (); curr_ = curr_->m_parent_ )
-        {
-            ;
-        }
-
-        auto parent_ = curr_->m_parent_;
-
-        if ( !parent_->m_parent_ ) /* curr_ is a root */
-            return nullptr;
-
-        return parent_;
-    }
-
-    base_ptr_ m_successor_for_erase_ () noexcept
-    {
-        auto curr_ = this;
-
-        if ( m_right_ )
-        {
-            /*
-             * Move down until we find it.
-             * Also have to decrease ich node size.
-             */
-
-            curr_ = m_right ();
-            while ( curr_->m_left_ )
-            {
-                curr_->m_size_--;
-                curr_ = curr_->m_left ();
-            }
-            return curr_;
-        }
-
-        /* move up until we find it or reach the root. */
-        for ( ; curr_->m_parent_->m_parent_ && !curr_->is_left_child_ (); curr_ = curr_->m_parent_ )
-        {
-            ;
-        }
-
-        auto parent_ = curr_->m_parent_;
-
-        if ( !parent_->m_parent_ ) /* curr_ is a root */
-            return nullptr;
-
-        return parent_;
-    }
+    base_ptr_ m_successor_for_erase_ () noexcept;
 
     base_ptr_ avl_tree_increment_ () noexcept;
     base_ptr_ avl_tree_decrement_ () noexcept;
