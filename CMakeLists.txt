@@ -16,10 +16,10 @@ set (MYSET_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/include)
 
 find_package(GTest)
 set(NOGTEST FALSE ON CACHE BOOL "Disable GoogleTest")
-set(COMPARE FALSE ON CACHE BOOL "Enable comparation with std::set.")
+set(NOCOMPARE FALSE ON CACHE BOOL "Enable comparation with std::set.")
 
 if (COMPARE)
-    message(WARNING "Comparation with std::test enabled. It should take a lot of time. If you want to disable it rerun with -DCOMPARE=FALSE")
+    message(WARNING "Comparation with std::test enabled. It should take a lot of time. If you want to disable it rerun with -DNOCOMPARE=TRUE")
 endif()
 
 enable_testing()
