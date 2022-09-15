@@ -1,4 +1,4 @@
-#!bin/bash
+#!/bin/bash
 
 base_folder="resources"
 
@@ -10,7 +10,6 @@ current_folder=${2:-./}
 passed=true
 
 for file in ${current_folder}/${base_folder}/test*.dat; do
-    
 
     echo -n "Testing ${green}${file}${reset} ... "
 
