@@ -10,6 +10,7 @@
 #include "myset.hpp"
 #include <gtest/gtest.h>
 
+template class my::set<int>;
 TEST (Test_set, Test_insert_1)
 {
     my::set<int> set;
