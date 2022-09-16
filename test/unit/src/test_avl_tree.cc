@@ -14,6 +14,8 @@
 using owning_ptr_ = typename my::avl_tree_<int>::owning_ptr_;
 using base_ptr_   = typename my::avl_tree_<int>::base_ptr_;
 
+template struct my::avl_tree_<int>;
+
 TEST (Test_avl_tree_node_base_, Test_m_maximum_)
 {
     auto head = new my::avl_tree_node_base_ {0};

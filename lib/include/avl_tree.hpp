@@ -130,16 +130,6 @@ struct avl_tree_header_
         m_reset_ ();
     }
 
-    void m_move_data_ (avl_tree_header_ &from_) noexcept
-    {
-        m_header_->m_bf_     = from_.m_header_->m_bf_;
-        m_header_->m_parent_ = from_.m_header_->m_parent_;
-        m_header_->m_left_   = std::move (from_.m_header_->m_left_);
-        m_header_->m_right_  = std::move (from_.m_header_->m_right_);
-
-        from_.m_reset_ ();
-    }
-
     void m_reset_ () noexcept
     {
         m_header_->m_parent_ = nullptr;
@@ -274,8 +264,6 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
 
     base_ptr_ m_end_ () const noexcept { return m_impl_::m_rightmost_; }
 
-    link_type_ m_copy_ (const avl_tree_ &tree_);
-
     iterator m_lower_bound_ (base_ptr_ x_, base_ptr_ y_, const key_type &k_);
 
     iterator m_upper_bound_ (base_ptr_ x_, base_ptr_ y_, const key_type &k_);
@@ -286,19 +274,10 @@ struct avl_tree_ : public avl_tree_impl_<Key_, Compare_>
     avl_tree_ () : m_impl_ (Compare_ {}) {}
     avl_tree_ (const Compare_ &comp_) : m_impl_ (comp_) {}
 
-    avl_tree_ (const avl_tree_ &tree_) { m_root_ () = m_copy (tree_); }
-
-    // default move ctor
-
-    ~avl_tree_ () noexcept {}
-
-    avl_tree_ &operator= (const avl_tree_ &tree_);
-
     base_ptr_ m_leftmost_ () { return m_impl_::m_leftmost_; }
     base_ptr_ m_rightmost_ () { return m_impl_::m_rightmost_; }
 
     // Accessors.
-    Compare_ key_comp () const { return m_impl_::base_key_compare_ (); }
 
     iterator begin () const noexcept { return iterator (m_impl_::m_leftmost_, this); }
 
