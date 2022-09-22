@@ -21,7 +21,7 @@ class set : public avl_tree_<Key_, Compare_>
     using tree_impl_ = avl_tree_<Key_, Compare_>;
 
   public:
-    using key_type         = typename tree_impl_::key_type;
+    using value_type       = typename tree_impl_::value_type;
     using reference        = typename tree_impl_::reference;
     using pointer          = typename tree_impl_::pointer;
     using size_type        = typename tree_impl_::size_type;

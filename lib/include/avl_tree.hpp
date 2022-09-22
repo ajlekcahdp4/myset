@@ -88,6 +88,14 @@ struct avl_tree_node_base_
     }
 };
 
+// Node type.
+template <typename val_> struct avl_tree_node_ : public avl_tree_node_base_
+{
+    avl_tree_node_ (val_ x_) : avl_tree_node_base_ (), m_key_ (x_) {}
+
+    val_ m_key_;
+};
+
 // Helper type offering value initialization guarantee on the compare functor.
 template <class key_compare_> struct avl_tree_key_compare_
 {
@@ -101,24 +109,12 @@ template <class key_compare_> struct avl_tree_key_compare_
     }
 };
 
-// Node type.
-template <typename val_> struct avl_tree_node_ : public avl_tree_node_base_
-{
-    using link_type_ = avl_tree_node_<val_>;
-    using node_ptr_  = link_type_ *;
-
-    avl_tree_node_ (val_ x_) : avl_tree_node_base_ (), m_key_ (x_) {}
-
-    val_ m_key_;
-};
-
 // Helper type to manage deafault initialization of node count and header.
 struct avl_tree_header_
 {
     using base_ptr_   = typename avl_tree_node_base_::base_ptr_;
     using owning_ptr_ = typename avl_tree_node_base_::owning_ptr_;
     using base_node_  = avl_tree_node_base_;
-    using size_type   = typename avl_tree_node_base_::size_type;
 
     owning_ptr_ m_header_  = nullptr;
     base_ptr_ m_leftmost_  = nullptr;
@@ -148,7 +144,7 @@ struct avl_tree_ : public avl_tree_key_compare_<Compare_>, public avl_tree_heade
 
     using base_ptr_   = typename avl_tree_node_base_::base_ptr_;
     using owning_ptr_ = typename avl_tree_node_base_::owning_ptr_;
-    using link_type_  = avl_tree_node_<Key_> *;
+    using node_ptr_   = avl_tree_node_<Key_> *;
     using base_node_  = avl_tree_node_base_;
 
     using node_ = avl_tree_node_<Key_>;
@@ -171,9 +167,9 @@ struct avl_tree_ : public avl_tree_key_compare_<Compare_>, public avl_tree_heade
         avl_tree_iterator_ (base_ptr_ x_, const avl_tree_ *tree_) noexcept
             : m_node_ (x_), m_tree_ (tree_) {};
 
-        reference operator* () const { return static_cast<link_type_> (m_node_)->m_key_; }
+        reference operator* () const { return static_cast<node_ptr_> (m_node_)->m_key_; }
 
-        pointer get () { return &(static_cast<link_type_> (m_node_)->m_key_); }
+        pointer get () { return &(static_cast<node_ptr_> (m_node_)->m_key_); }
 
         pointer operator->() { return get (); }
 
@@ -218,10 +214,10 @@ struct avl_tree_ : public avl_tree_key_compare_<Compare_>, public avl_tree_heade
     };
 
   public:
-    using key_type         = Key_;
-    using value_type       = Key_;
-    using pointer          = value_type *;
-    using reference        = value_type &;
+    using value_type = Key_;
+    using pointer    = value_type *;
+    using reference  = value_type &;
+
     using iterator         = avl_tree_iterator_;
     using reverse_iterator = std::reverse_iterator<iterator>;
 
@@ -239,11 +235,11 @@ struct avl_tree_ : public avl_tree_key_compare_<Compare_>, public avl_tree_heade
 
     base_ptr_ m_end_ () const noexcept { return m_rightmost_; }
 
-    iterator m_lower_bound_ (base_ptr_ x_, base_ptr_ y_, const key_type &k_);
+    iterator m_lower_bound_ (base_ptr_ x_, base_ptr_ y_, const value_type &k_);
 
-    iterator m_upper_bound_ (base_ptr_ x_, base_ptr_ y_, const key_type &k_);
+    iterator m_upper_bound_ (base_ptr_ x_, base_ptr_ y_, const value_type &k_);
 
-    static key_type &s_key_ (base_ptr_ node_) { return static_cast<link_type_> (node_)->m_key_; }
+    static value_type &s_key_ (base_ptr_ node_) { return static_cast<node_ptr_> (node_)->m_key_; }
 
   public:
     avl_tree_ () : base_key_compare_ (Compare_ {}) {}
@@ -268,7 +264,7 @@ struct avl_tree_ : public avl_tree_key_compare_<Compare_>, public avl_tree_heade
     bool empty () const noexcept { return (size () == 0); }
 
     template <typename F>
-    std::tuple<base_ptr_, base_ptr_, bool> m_trav_bin_search_ (key_type key_, F step_);
+    std::tuple<base_ptr_, base_ptr_, bool> m_trav_bin_search_ (value_type key_, F step_);
 
     // Insert/erase.
 
@@ -277,7 +273,7 @@ struct avl_tree_ : public avl_tree_key_compare_<Compare_>, public avl_tree_heade
     base_ptr_ m_insert_node_ (owning_ptr_ to_insert_);
 
     // create node, insert and rebalance tree
-    iterator m_insert_ (const key_type &key_)
+    iterator m_insert_ (const value_type &key_)
     {
         auto to_insert_             = new node_ (key_);
         auto to_insert_base_unique_ = owning_ptr_ (static_cast<base_ptr_> (to_insert_));
@@ -300,13 +296,13 @@ struct avl_tree_ : public avl_tree_key_compare_<Compare_>, public avl_tree_heade
     base_ptr_ m_erase_pos_impl_ (iterator pos_);
 
   public:
-    iterator find (const key_type &key_)
+    iterator find (const value_type &key_)
     {
         auto tuple_ = m_trav_bin_search_ (key_, [] (base_ptr_ &) {});
         return iterator (std::get<0> (tuple_), this);
     }
 
-    iterator m_find_for_erase_ (const key_type &key_)
+    iterator m_find_for_erase_ (const value_type &key_)
     {
         auto tuple_ = m_trav_bin_search_ (key_, [] (base_ptr_ &node_) { node_->m_size_--; });
         auto node_  = std::get<0> (tuple_);
@@ -318,9 +314,9 @@ struct avl_tree_ : public avl_tree_key_compare_<Compare_>, public avl_tree_heade
         throw std::out_of_range ("No element with requested key for erase.");
     }
 
-    iterator insert (const key_type &key_) { return m_insert_ (key_); }
+    iterator insert (const value_type &key_) { return m_insert_ (key_); }
 
-    bool erase (const key_type &key_)
+    bool erase (const value_type &key_)
     {
         auto to_erase_pos_ = m_find_for_erase_ (key_);
         return m_erase_pos_ (to_erase_pos_);
@@ -338,18 +334,18 @@ struct avl_tree_ : public avl_tree_key_compare_<Compare_>, public avl_tree_heade
     void clear () noexcept { m_reset_ (); }
 
     // Set operations.
-    iterator lower_bound (const key_type &k_) { return m_lower_bound_ (m_root_ (), nullptr, k_); }
+    iterator lower_bound (const value_type &k_) { return m_lower_bound_ (m_root_ (), nullptr, k_); }
 
-    iterator upper_bound (const key_type &k_) { return m_upper_bound_ (m_root_ (), nullptr, k_); }
+    iterator upper_bound (const value_type &k_) { return m_upper_bound_ (m_root_ (), nullptr, k_); }
 
     // return key value of ith smallest element in AVL-tree
-    key_type m_os_select_ (size_type i);
+    value_type m_os_select_ (size_type i);
 
     // return the rank of the node with matching key_
     size_type m_get_rank_of_ (iterator pos_);
 
     // Return number of elements with the key less then the given one.
-    size_type m_get_number_less_then_ (key_type key_)
+    size_type m_get_number_less_then_ (value_type key_)
     {
         if ( empty () )
             return 0;
@@ -376,9 +372,9 @@ struct avl_tree_ : public avl_tree_key_compare_<Compare_>, public avl_tree_heade
     friend bool operator!= (const avl_tree_ &x_, const avl_tree_ &y_) { return !(x_ == y_); }
 
   public:
-    key_type os_select (size_type i) { return m_os_select_ (i); }
+    value_type os_select (size_type i) { return m_os_select_ (i); }
 
-    size_type get_number_less_then (key_type key_) { return m_get_number_less_then_ (key_); }
+    size_type get_number_less_then (value_type key_) { return m_get_number_less_then_ (key_); }
 
     void dump (std::string filename) const
     {
@@ -416,7 +412,7 @@ struct avl_tree_ : public avl_tree_key_compare_<Compare_>, public avl_tree_heade
 };
 
 template <typename Key_, typename Comp_>
-typename avl_tree_<Key_, Comp_>::key_type avl_tree_<Key_, Comp_>::m_os_select_ (size_type i)
+typename avl_tree_<Key_, Comp_>::value_type avl_tree_<Key_, Comp_>::m_os_select_ (size_type i)
 {
     if ( i > size () || !i )
         throw std::out_of_range ("i is greater then the size of the tree or zero.");
@@ -467,7 +463,7 @@ template <typename Key_, typename Comp_>
 template <typename F>
 std::tuple<typename avl_tree_<Key_, Comp_>::base_ptr_, typename avl_tree_<Key_, Comp_>::base_ptr_,
            bool>
-avl_tree_<Key_, Comp_>::m_trav_bin_search_ (key_type key_, F step_)
+avl_tree_<Key_, Comp_>::m_trav_bin_search_ (value_type key_, F step_)
 {
     using res_ = std::tuple<base_ptr_, base_ptr_, bool>;
 
@@ -722,7 +718,7 @@ void avl_tree_<Key_, Comp_>::m_rebalance_for_erase_ (base_ptr_ node_)
 // Accessors.
 template <typename Key_, typename Comp_>
 typename avl_tree_<Key_, Comp_>::iterator
-avl_tree_<Key_, Comp_>::m_lower_bound_ (base_ptr_ x_, base_ptr_ y_, const key_type &k_)
+avl_tree_<Key_, Comp_>::m_lower_bound_ (base_ptr_ x_, base_ptr_ y_, const value_type &k_)
 {
     while ( x_ )
     {
@@ -740,7 +736,7 @@ avl_tree_<Key_, Comp_>::m_lower_bound_ (base_ptr_ x_, base_ptr_ y_, const key_ty
 
 template <typename Key_, typename Comp_>
 typename avl_tree_<Key_, Comp_>::iterator
-avl_tree_<Key_, Comp_>::m_upper_bound_ (base_ptr_ x_, base_ptr_ y_, const key_type &k_)
+avl_tree_<Key_, Comp_>::m_upper_bound_ (base_ptr_ x_, base_ptr_ y_, const value_type &k_)
 {
     while ( x_ )
     {
