@@ -540,11 +540,8 @@ avl_tree_<Key_, Comp_>::m_insert_node_ (owning_ptr_ to_insert_)
     }
 
     /* Find right position in the tree */
-    auto res =
+    auto [found, prev, prev_greater] =
         m_trav_bin_search_ (s_key_ (to_insert_ptr_), [] (base_ptr_ &node_) { node_->m_size_++; });
-    auto found        = std::get<0> (res);
-    auto prev         = std::get<1> (res);
-    auto prev_greater = std::get<2> (res);
 
     if ( found )
     {
