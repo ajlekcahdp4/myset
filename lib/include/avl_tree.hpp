@@ -97,11 +97,15 @@ template <typename val_> struct avl_tree_node_ : public avl_tree_node_base_
 };
 
 // Helper type offering value initialization guarantee on the compare functor.
-template <class key_compare_> struct avl_tree_key_compare_
+template <class Compare_> struct avl_tree_key_compare_
 {
-    key_compare_ m_key_compare_;
+    Compare_ m_key_compare_;
 
-    avl_tree_key_compare_ (const key_compare_ &comp_) : m_key_compare_ (comp_) {}
+    avl_tree_key_compare_ (const Compare_ &comp_) : m_key_compare_ (comp_) {}
+    avl_tree_key_compare_ (avl_tree_key_compare_<Compare_> &&other)
+    {
+        m_key_compare_ = std::move (other.m_key_compare_);
+    }
 
     template <typename Key_> bool operator() (const Key_ &k1_, const Key_ &k2_)
     {
@@ -141,6 +145,7 @@ template <typename Key_, class Compare_ = std::less<Key_>>
 struct avl_tree_ : public avl_tree_key_compare_<Compare_>, public avl_tree_header_
 {
     using base_key_compare_ = avl_tree_key_compare_<Compare_>;
+    using self_             = avl_tree_<Key_, Compare_>;
 
     using base_ptr_   = typename avl_tree_node_base_::base_ptr_;
     using owning_ptr_ = typename avl_tree_node_base_::owning_ptr_;
@@ -244,6 +249,16 @@ struct avl_tree_ : public avl_tree_key_compare_<Compare_>, public avl_tree_heade
   public:
     avl_tree_ () : base_key_compare_ (Compare_ {}) {}
     avl_tree_ (const Compare_ &comp_) : base_key_compare_ (comp_), avl_tree_header_ () {}
+
+    avl_tree_ (const self_ &other)        = delete;
+    self_ &operator= (const self_ &other) = delete;
+
+    avl_tree_ (self_ &&other) noexcept : base_key_compare_ (std::move (other.m_key_compare_))
+    {
+        this->m_header_ = std::move (other.m_header_);
+        std::swap (m_leftmost_, other.m_leftmost_);
+        std::swap (m_rightmost_, other.m_rightmost_);
+    }
 
     // Accessors.
 

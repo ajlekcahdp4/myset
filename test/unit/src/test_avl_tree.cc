@@ -476,3 +476,23 @@ TEST (Test_avl_tree_, Test_equal_2)
     EXPECT_TRUE (tree1 == tree2);
     EXPECT_FALSE (tree1 != tree2);
 }
+
+TEST (Test_avl_tree_, Test_move_ctor)
+{
+    my::avl_tree_<int> tree;
+
+    for ( int i = 1; i <= 10; i++ )
+        tree.insert (i);
+
+    tree.erase (1);
+    tree.erase (7);
+    tree.erase (4);
+
+    std::vector<int> v {10, 9, 8, 6, 5, 3, 2};
+    my::avl_tree_<int> tree2 = std::move (tree);
+    for ( auto &i : tree2 )
+    {
+        EXPECT_EQ (i, v.back ());
+        v.pop_back ();
+    }
+}
