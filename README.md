@@ -4,7 +4,7 @@ Rethinking std::set. My goal is to create AVL tree that would be more efficient 
 ## How to compile
 ```
 cmake -S . -B build -DNOGTEST=FALSE -DCOMPARE=FALSE
-make -C build
+make -C build -j12 install
 ```
 There I set NOGTEST to FALSE to enable unit-tests and COMPARE to FALSE to disable comparation with std::set. 
  
