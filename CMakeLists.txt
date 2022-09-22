@@ -1,8 +1,6 @@
-cmake_minimum_required(VERSION 3.11)
+cmake_minimum_required(VERSION 3.1)
 
 project (myset)
-
-set (CMAKE_CXX_COMPILER clang++)
 
 option(INSOURCEBUILD OFF)
 if((${PROJECT_SOURCE_DIR} STREQUAL ${PROJECT_BINARY_DIR}) AND NOT ${INSOURCEBUILD})
@@ -14,7 +12,8 @@ add_compile_options(-Wall -Wextra)
 set (MYSET_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 set (MYSET_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/include)
 
-find_package(GTest)
+find_package(GTest REQUIRED)
+
 set(NOGTEST FALSE ON CACHE BOOL "Disable GoogleTest")
 set(NOCOMPARE FALSE ON CACHE BOOL "Enable comparation with std::set.")
 
