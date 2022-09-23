@@ -32,6 +32,4 @@ int main ()
             not_end = false;
         }
     }
-
-    std::cout << std::endl;
 }
