@@ -8,6 +8,7 @@ set (UNITT_SOURCES
 
 add_executable(unitt ${UNITT_SOURCES})
 target_include_directories(unitt PRIVATE ${MYSET_INCLUDE_DIR})
-target_link_libraries(unitt ${GTEST_BOTH_LIBRARIES})
-target_link_libraries(unitt myset)
+target_link_libraries(unitt ${GTEST_BOTH_LIBRARIES} Threads::Threads)
+target_link_libraries(unitt myset Threads::Threads)
+
 gtest_discover_tests (unitt)

@@ -12,6 +12,7 @@ add_compile_options(-Wall -Wextra)
 set (MYSET_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 set (MYSET_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/include)
 
+find_package(Threads REQUIRED)
 find_package(GTest REQUIRED)
 
 set(NOGTEST FALSE ON CACHE BOOL "Disable GoogleTest")
