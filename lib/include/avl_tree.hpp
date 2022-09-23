@@ -204,15 +204,9 @@ struct avl_tree_ : public avl_tree_key_compare_<Compare_>, public avl_tree_heade
             return tmp_;
         }
 
-        friend bool operator== (const self_ &x_, const self_ &y_) noexcept
-        {
-            return x_.m_node_ == y_.m_node_;
-        }
+        bool operator== (const self_ &other_) const noexcept { return m_node_ == other_.m_node_; }
 
-        friend bool operator!= (const self_ &x_, const self_ &y_) noexcept
-        {
-            return x_.m_node_ != y_.m_node_;
-        }
+        bool operator!= (const self_ &other_) const noexcept { return m_node_ != other_.m_node_; }
 
         base_ptr_ m_node_;
         const avl_tree_ *m_tree_;
@@ -378,15 +372,14 @@ struct avl_tree_ : public avl_tree_key_compare_<Compare_>, public avl_tree_heade
         return (*closest_left_ == key_ ? rank_ - 1 : rank_);
     }
 
-  private:
-    friend bool operator== (const avl_tree_ &x_, const avl_tree_ &y_)
+  public:
+    bool operator== (const avl_tree_ &other_) const
     {
-        return x_.size () == y_.size () && std::equal (x_.begin (), x_.end (), y_.begin ());
+        return size () == other_.size () && std::equal (begin (), end (), other_.begin ());
     }
 
-    friend bool operator!= (const avl_tree_ &x_, const avl_tree_ &y_) { return !(x_ == y_); }
+    bool operator!= (const avl_tree_ &other_) const { return !(*this == other_); }
 
-  public:
     value_type os_select (size_type i) { return m_os_select_ (i); }
 
     size_type get_number_less_then (value_type key_) { return m_get_number_less_then_ (key_); }
