@@ -124,7 +124,7 @@ struct avl_tree_header_
     base_ptr_ m_leftmost_  = nullptr;
     base_ptr_ m_rightmost_ = nullptr;
 
-    avl_tree_header_ () noexcept
+    avl_tree_header_ ()
     {
         m_header_ = std::make_unique<base_node_> ();
         m_reset_ ();
