@@ -21,7 +21,7 @@
 #include <tuple>
 #include <utility>
 
-namespace rethinking_std
+namespace rethinking_stl
 {
 
 //===============================avl_tree_node_base===============================
@@ -760,4 +760,4 @@ avl_tree_<Key_, Comp_>::m_upper_bound_ (base_ptr_ x_, base_ptr_ y_, const value_
     return iterator (y_, this);
 }
 
-}   // namespace rethinking_std
+}   // namespace rethinking_stl

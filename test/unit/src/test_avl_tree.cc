@@ -11,18 +11,18 @@
 #include "avl_tree.hpp"
 #include <gtest/gtest.h>
 
-using owning_ptr_ = typename rethinking_std::avl_tree_<int>::owning_ptr_;
-using base_ptr_   = typename rethinking_std::avl_tree_<int>::base_ptr_;
+using owning_ptr_ = typename rethinking_stl::avl_tree_<int>::owning_ptr_;
+using base_ptr_   = typename rethinking_stl::avl_tree_<int>::base_ptr_;
 
-template struct rethinking_std::avl_tree_<int>;
+template struct rethinking_stl::avl_tree_<int>;
 
 TEST (Test_avl_tree_node_base_, Test_m_maximum_)
 {
-    auto head = new rethinking_std::avl_tree_node_base_ {0};
+    auto head = new rethinking_stl::avl_tree_node_base_ {0};
 
-    head->m_left_            = owning_ptr_ (new rethinking_std::avl_tree_node_base_ {-1});
-    head->m_right_           = owning_ptr_ (new rethinking_std::avl_tree_node_base_ {1});
-    head->m_right_->m_right_ = owning_ptr_ (new rethinking_std::avl_tree_node_base_ {2});
+    head->m_left_            = owning_ptr_ (new rethinking_stl::avl_tree_node_base_ {-1});
+    head->m_right_           = owning_ptr_ (new rethinking_stl::avl_tree_node_base_ {1});
+    head->m_right_->m_right_ = owning_ptr_ (new rethinking_stl::avl_tree_node_base_ {2});
 
     auto max = head->m_maximum_ ();
     EXPECT_EQ (max->m_bf_, 2);
@@ -30,11 +30,11 @@ TEST (Test_avl_tree_node_base_, Test_m_maximum_)
 
 TEST (Test_avl_tree_node_base_, Test_m_minimum_)
 {
-    auto head = new rethinking_std::avl_tree_node_base_ {0};
+    auto head = new rethinking_stl::avl_tree_node_base_ {0};
 
-    head->m_right_         = owning_ptr_ (new rethinking_std::avl_tree_node_base_ {1});
-    head->m_left_          = owning_ptr_ (new rethinking_std::avl_tree_node_base_ {-1});
-    head->m_left_->m_left_ = owning_ptr_ (new rethinking_std::avl_tree_node_base_ {-2});
+    head->m_right_         = owning_ptr_ (new rethinking_stl::avl_tree_node_base_ {1});
+    head->m_left_          = owning_ptr_ (new rethinking_stl::avl_tree_node_base_ {-1});
+    head->m_left_->m_left_ = owning_ptr_ (new rethinking_stl::avl_tree_node_base_ {-2});
 
     auto max = head->m_minimum_ ();
     EXPECT_EQ (max->m_bf_, -2);
@@ -42,9 +42,9 @@ TEST (Test_avl_tree_node_base_, Test_m_minimum_)
 
 TEST (Test_avl_tree_iterator_, TestCtorDeref)
 {
-    auto head = new rethinking_std::avl_tree_node_<int> (666);
+    auto head = new rethinking_stl::avl_tree_node_<int> (666);
 
-    rethinking_std::avl_tree_<int>::avl_tree_iterator_ pos (head);
+    rethinking_stl::avl_tree_<int>::avl_tree_iterator_ pos (head);
 
     EXPECT_EQ (*pos, 666);
 }
@@ -57,23 +57,23 @@ struct entry
 TEST (Test_avl_tree_iterator_, TestArrowOperator)
 {
     entry b   = {9};
-    auto head = new rethinking_std::avl_tree_node_<entry> (b);
+    auto head = new rethinking_stl::avl_tree_node_<entry> (b);
 
-    rethinking_std::avl_tree_<entry>::avl_tree_iterator_ pos (head);
+    rethinking_stl::avl_tree_<entry>::avl_tree_iterator_ pos (head);
 
     EXPECT_EQ (pos->a, 9);
 }
 
 TEST (Test_avl_tree_iterator_, TestPostIncrement)
 {
-    auto head       = new rethinking_std::avl_tree_node_<int> (0);
+    auto head       = new rethinking_stl::avl_tree_node_<int> (0);
     head->m_parent_ = head;
 
-    auto new_node             = new rethinking_std::avl_tree_node_<int> (1);
+    auto new_node             = new rethinking_stl::avl_tree_node_<int> (1);
     head->m_right_            = owning_ptr_ (static_cast<base_ptr_> (new_node));
     head->m_right_->m_parent_ = head;
 
-    rethinking_std::avl_tree_<int>::avl_tree_iterator_ head_pos (head);
+    rethinking_stl::avl_tree_<int>::avl_tree_iterator_ head_pos (head);
 
     EXPECT_EQ (*head_pos, 0);
 
@@ -84,14 +84,14 @@ TEST (Test_avl_tree_iterator_, TestPostIncrement)
 
 TEST (Test_avl_tree_iterator_, TestPreIncrement)
 {
-    auto head       = new rethinking_std::avl_tree_node_<int> (0);
+    auto head       = new rethinking_stl::avl_tree_node_<int> (0);
     head->m_parent_ = head;
 
-    auto new_node             = new rethinking_std::avl_tree_node_<int> (1);
+    auto new_node             = new rethinking_stl::avl_tree_node_<int> (1);
     head->m_right_            = owning_ptr_ (static_cast<base_ptr_> (new_node));
     head->m_right_->m_parent_ = head;
 
-    rethinking_std::avl_tree_<int>::avl_tree_iterator_ head_pos (head);
+    rethinking_stl::avl_tree_<int>::avl_tree_iterator_ head_pos (head);
 
     EXPECT_EQ (*head_pos, 0);
 
@@ -102,14 +102,14 @@ TEST (Test_avl_tree_iterator_, TestPreIncrement)
 
 TEST (Test_avl_tree_iterator_, TestPreDecrement)
 {
-    auto head       = new rethinking_std::avl_tree_node_<int> (0);
+    auto head       = new rethinking_stl::avl_tree_node_<int> (0);
     head->m_parent_ = head;
 
-    auto new_node            = new rethinking_std::avl_tree_node_<int> (-1);
+    auto new_node            = new rethinking_stl::avl_tree_node_<int> (-1);
     head->m_left_            = owning_ptr_ (static_cast<base_ptr_> (new_node));
     head->m_left_->m_parent_ = head;
 
-    rethinking_std::avl_tree_<int>::avl_tree_iterator_ head_pos (head);
+    rethinking_stl::avl_tree_<int>::avl_tree_iterator_ head_pos (head);
 
     EXPECT_EQ (*head_pos, 0);
 
@@ -120,7 +120,7 @@ TEST (Test_avl_tree_iterator_, TestPreDecrement)
 
 TEST (Test_avl_tree_iterator_, TestDecrement)
 {
-    rethinking_std::avl_tree_<int> tree;
+    rethinking_stl::avl_tree_<int> tree;
 
     for ( int i = 1; i <= 10; i++ )
         tree.insert (i);
@@ -139,7 +139,7 @@ TEST (Test_avl_tree_iterator_, TestDecrement)
 
 TEST (Test_avl_tree_iterator_, TestIncrement)
 {
-    rethinking_std::avl_tree_<int> tree;
+    rethinking_stl::avl_tree_<int> tree;
 
     for ( int i = 1; i <= 10; i++ )
         tree.insert (i);
@@ -156,14 +156,14 @@ TEST (Test_avl_tree_iterator_, TestIncrement)
 
 TEST (Test_avl_tree_, TestInsert)
 {
-    rethinking_std::avl_tree_<int> tree;
+    rethinking_stl::avl_tree_<int> tree;
     tree.insert (1);
     EXPECT_EQ (*(tree.begin ()), 1);
 }
 
 TEST (Test_avl_tree_, TestEraseLastOne)
 {
-    rethinking_std::avl_tree_<int> tree;
+    rethinking_stl::avl_tree_<int> tree;
     tree.insert (1);
     tree.erase (tree.begin ());
 
@@ -173,7 +173,7 @@ TEST (Test_avl_tree_, TestEraseLastOne)
 
 TEST (Test_avl_tree_, TestEraseLeftmost)
 {
-    rethinking_std::avl_tree_<int> tree;
+    rethinking_stl::avl_tree_<int> tree;
     for ( int i = 6; i <= 10; i++ )
     {
         tree.insert (i);
@@ -189,7 +189,7 @@ TEST (Test_avl_tree_, TestEraseLeftmost)
 
 TEST (Test_avl_tree_, TestEraseRightmost)
 {
-    rethinking_std::avl_tree_<int> tree;
+    rethinking_stl::avl_tree_<int> tree;
     for ( int i = 6; i <= 10; i++ )
     {
         tree.insert (i);
@@ -209,7 +209,7 @@ TEST (Test_avl_tree_, TestEraseRightmost)
 
 TEST (Test_avl_tree_, TestEraseThroughTheKeyOnly)
 {
-    rethinking_std::avl_tree_<int> tree;
+    rethinking_stl::avl_tree_<int> tree;
     tree.insert (1);
     tree.erase (1);
 
@@ -218,7 +218,7 @@ TEST (Test_avl_tree_, TestEraseThroughTheKeyOnly)
 
 TEST (Test_avl_tree_, TestEraseThroughTheKeyFirst)
 {
-    rethinking_std::avl_tree_<int> tree;
+    rethinking_stl::avl_tree_<int> tree;
     tree.insert (1);
     tree.insert (2);
 
@@ -232,7 +232,7 @@ TEST (Test_avl_tree_, TestEraseThroughTheKeyFirst)
 
 TEST (Test_avl_tree_, TestEraseThroughTheKeyLast)
 {
-    rethinking_std::avl_tree_<int> tree;
+    rethinking_stl::avl_tree_<int> tree;
     tree.insert (1);
     tree.insert (2);
 
@@ -246,7 +246,7 @@ TEST (Test_avl_tree_, TestEraseThroughTheKeyLast)
 
 TEST (Test_avl_tree_, TestDoubleInsert)
 {
-    rethinking_std::avl_tree_<int> tree;
+    rethinking_stl::avl_tree_<int> tree;
     for ( int i = 0; i < 10; i++ )
         tree.insert (i);
 
@@ -261,7 +261,7 @@ TEST (Test_avl_tree_, TestDoubleInsert)
 
 TEST (Test_avl_tree_, TestDeleteWrong)
 {
-    rethinking_std::avl_tree_<int> tree;
+    rethinking_stl::avl_tree_<int> tree;
     for ( int i = 0; i < 10; i++ )
         tree.insert (i);
 
@@ -276,7 +276,7 @@ TEST (Test_avl_tree_, TestDeleteWrong)
 
 TEST (Test_avl_tree_, TestDeleteAll)
 {
-    rethinking_std::avl_tree_<int> tree;
+    rethinking_stl::avl_tree_<int> tree;
 
     for ( int i = 0; i < 10; i++ )
         tree.insert (i);
@@ -290,7 +290,7 @@ TEST (Test_avl_tree_, TestDeleteAll)
 
 TEST (Test_avl_tree_, Test_select_1)
 {
-    rethinking_std::avl_tree_<int> tree;
+    rethinking_stl::avl_tree_<int> tree;
 
     for ( int i = 0; i < 10; i++ )
         tree.insert (i);
@@ -311,7 +311,7 @@ TEST (Test_avl_tree_, Test_select_1)
 
 TEST (Test_avl_tree_, Test_select_2)
 {
-    rethinking_std::avl_tree_<int> tree;
+    rethinking_stl::avl_tree_<int> tree;
 
     for ( int i = 1; i <= 10; i++ )
         tree.insert (i);
@@ -332,7 +332,7 @@ TEST (Test_avl_tree_, Test_select_2)
 
 TEST (Test_avl_tree_, Test_number_less_then)
 {
-    rethinking_std::avl_tree_<int> tree;
+    rethinking_stl::avl_tree_<int> tree;
 
     for ( int i = 1; i <= 10; i++ )
         tree.insert (i);
@@ -347,7 +347,7 @@ TEST (Test_avl_tree_, Test_number_less_then)
 
 TEST (Test_avl_tree_, Test_lower_bound)
 {
-    rethinking_std::avl_tree_<int> tree;
+    rethinking_stl::avl_tree_<int> tree;
 
     for ( int i = 1; i <= 10; i++ )
         tree.insert (i);
@@ -364,7 +364,7 @@ TEST (Test_avl_tree_, Test_lower_bound)
 
 TEST (Test_avl_tree_, Test_upper_bound)
 {
-    rethinking_std::avl_tree_<int> tree;
+    rethinking_stl::avl_tree_<int> tree;
 
     for ( int i = 1; i <= 10; i++ )
         tree.insert (i);
@@ -381,7 +381,7 @@ TEST (Test_avl_tree_, Test_upper_bound)
 
 TEST (Test_avl_tree_, Test_range_for)
 {
-    rethinking_std::avl_tree_<int> tree;
+    rethinking_stl::avl_tree_<int> tree;
 
     for ( int i = 1; i <= 10; i++ )
         tree.insert (i);
@@ -401,7 +401,7 @@ TEST (Test_avl_tree_, Test_range_for)
 
 TEST (Test_avl_tree_, Test_clear)
 {
-    rethinking_std::avl_tree_<int> tree;
+    rethinking_stl::avl_tree_<int> tree;
 
     for ( int i = 1; i <= 10; i++ )
         tree.insert (i);
@@ -418,7 +418,7 @@ TEST (Test_avl_tree_, Test_clear)
 
 TEST (Test_avl_tree_, Test_equal_1)
 {
-    rethinking_std::avl_tree_<int> tree1;
+    rethinking_stl::avl_tree_<int> tree1;
 
     for ( int i = 1; i <= 10; i++ )
         tree1.insert (i);
@@ -427,7 +427,7 @@ TEST (Test_avl_tree_, Test_equal_1)
     tree1.erase (7);
     tree1.erase (4);
 
-    rethinking_std::avl_tree_<int> tree2;
+    rethinking_stl::avl_tree_<int> tree2;
 
     for ( int i = 1; i <= 10; i++ )
         tree2.insert (i);
@@ -435,7 +435,7 @@ TEST (Test_avl_tree_, Test_equal_1)
     tree2.erase (1);
     tree2.erase (4);
 
-    rethinking_std::avl_tree_<int> tree3;
+    rethinking_stl::avl_tree_<int> tree3;
 
     for ( int i = 1; i <= 10; i++ )
         tree3.insert (i);
@@ -455,7 +455,7 @@ TEST (Test_avl_tree_, Test_equal_1)
 
 TEST (Test_avl_tree_, Test_equal_2)
 {
-    rethinking_std::avl_tree_<int> tree1;
+    rethinking_stl::avl_tree_<int> tree1;
 
     for ( int i = 1; i <= 10; i++ )
         tree1.insert (i);
@@ -464,7 +464,7 @@ TEST (Test_avl_tree_, Test_equal_2)
     tree1.erase (7);
     tree1.erase (4);
 
-    rethinking_std::avl_tree_<int> tree2;
+    rethinking_stl::avl_tree_<int> tree2;
 
     for ( int i = 1; i <= 10; i++ )
         tree2.insert (i);
@@ -479,7 +479,7 @@ TEST (Test_avl_tree_, Test_equal_2)
 
 TEST (Test_avl_tree_, Test_move_ctor)
 {
-    rethinking_std::avl_tree_<int> tree;
+    rethinking_stl::avl_tree_<int> tree;
 
     for ( int i = 1; i <= 10; i++ )
         tree.insert (i);
@@ -489,7 +489,7 @@ TEST (Test_avl_tree_, Test_move_ctor)
     tree.erase (4);
 
     std::vector<int> v {10, 9, 8, 6, 5, 3, 2};
-    rethinking_std::avl_tree_<int> tree2 = std::move (tree);
+    rethinking_stl::avl_tree_<int> tree2 = std::move (tree);
     for ( auto &i : tree2 )
     {
         EXPECT_EQ (i, v.back ());

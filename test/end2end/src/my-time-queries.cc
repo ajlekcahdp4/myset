@@ -2,11 +2,11 @@
 #include <iostream>
 #include <sstream>
 
-template class rethinking_std::set<int>;
+template class rethinking_stl::set<int>;
 
 int main ()
 {
-    rethinking_std::set<int> set_ {};
+    rethinking_stl::set<int> set_ {};
     bool not_end = true;
 
     while ( not_end )

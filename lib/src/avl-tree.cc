@@ -10,7 +10,7 @@
 // avl_tree_utilities implementation
 
 #include "avl_tree.hpp"
-namespace rethinking_std
+namespace rethinking_stl
 {
 
 typename avl_tree_node_base_::base_ptr_ avl_tree_node_base_::m_predecessor_for_erase_ () noexcept
@@ -362,4 +362,4 @@ avl_tree_node_base_::base_ptr_ avl_tree_node_base_::rotate_right_ ()
     return lchild_ptr_;
 }
 
-}   // namespace rethinking_std
+}   // namespace rethinking_stl
