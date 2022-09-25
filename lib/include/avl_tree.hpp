@@ -97,12 +97,12 @@ template <typename val_> struct do_avl_tree_node_ : public do_avl_tree_node_base
 };
 
 // Helper type offering value initialization guarantee on the compare functor.
-template <class Compare_> struct do_avl_tree_key_compare_compare_
+template <class Compare_> struct do_avl_tree_key_compare_
 {
     Compare_ m_key_compare_;
 
-    do_avl_tree_key_compare_compare_ (const Compare_ &comp_) : m_key_compare_ (comp_) {}
-    do_avl_tree_key_compare_compare_ (do_avl_tree_key_compare_compare_<Compare_> &&other)
+    do_avl_tree_key_compare_ (const Compare_ &comp_) : m_key_compare_ (comp_) {}
+    do_avl_tree_key_compare_ (do_avl_tree_key_compare_<Compare_> &&other)
     {
         m_key_compare_ = std::move (other.m_key_compare_);
     }
@@ -142,10 +142,10 @@ struct do_avl_tree_header_
 
 //=================================dynamic_order_avl_tree_=======================================
 template <typename Key_, class Compare_ = std::less<Key_>>
-struct dynamic_order_avl_tree_ : public do_avl_tree_key_compare_compare_<Compare_>,
+struct dynamic_order_avl_tree_ : public do_avl_tree_key_compare_<Compare_>,
                                  public do_avl_tree_header_
 {
-    using base_key_compare_ = do_avl_tree_key_compare_compare_<Compare_>;
+    using base_key_compare_ = do_avl_tree_key_compare_<Compare_>;
     using self_             = dynamic_order_avl_tree_<Key_, Compare_>;
 
     using base_ptr_   = typename do_avl_tree_node_base_::base_ptr_;
