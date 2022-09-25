@@ -40,11 +40,11 @@ TEST (Test_do_avl_tree_node_base_, Test_m_minimum_)
     EXPECT_EQ (max->m_bf_, -2);
 }
 
-TEST (Test_dynamic_order_avl_tree_iterator_, TestCtorDeref)
+TEST (Test_do_avl_tree_iterator_, TestCtorDeref)
 {
     auto head = new rethinking_stl::do_avl_tree_node_<int> (666);
 
-    rethinking_stl::dynamic_order_avl_tree_<int>::dynamic_order_avl_tree_iterator_ pos (head);
+    rethinking_stl::dynamic_order_avl_tree_<int>::do_avl_tree_iterator_ pos (head);
 
     EXPECT_EQ (*pos, 666);
 }
@@ -54,17 +54,17 @@ struct entry
     int a;
 };
 
-TEST (Test_dynamic_order_avl_tree_iterator_, TestArrowOperator)
+TEST (Test_do_avl_tree_iterator_, TestArrowOperator)
 {
     entry b   = {9};
     auto head = new rethinking_stl::do_avl_tree_node_<entry> (b);
 
-    rethinking_stl::dynamic_order_avl_tree_<entry>::dynamic_order_avl_tree_iterator_ pos (head);
+    rethinking_stl::dynamic_order_avl_tree_<entry>::do_avl_tree_iterator_ pos (head);
 
     EXPECT_EQ (pos->a, 9);
 }
 
-TEST (Test_dynamic_order_avl_tree_iterator_, TestPostIncrement)
+TEST (Test_do_avl_tree_iterator_, TestPostIncrement)
 {
     auto head       = new rethinking_stl::do_avl_tree_node_<int> (0);
     head->m_parent_ = head;
@@ -73,7 +73,7 @@ TEST (Test_dynamic_order_avl_tree_iterator_, TestPostIncrement)
     head->m_right_            = owning_ptr_ (static_cast<base_ptr_> (new_node));
     head->m_right_->m_parent_ = head;
 
-    rethinking_stl::dynamic_order_avl_tree_<int>::dynamic_order_avl_tree_iterator_ head_pos (head);
+    rethinking_stl::dynamic_order_avl_tree_<int>::do_avl_tree_iterator_ head_pos (head);
 
     EXPECT_EQ (*head_pos, 0);
 
@@ -82,7 +82,7 @@ TEST (Test_dynamic_order_avl_tree_iterator_, TestPostIncrement)
     EXPECT_EQ (*head_pos, 1);
 }
 
-TEST (Test_dynamic_order_avl_tree_iterator_, TestPreIncrement)
+TEST (Test_do_avl_tree_iterator_, TestPreIncrement)
 {
     auto head       = new rethinking_stl::do_avl_tree_node_<int> (0);
     head->m_parent_ = head;
@@ -91,7 +91,7 @@ TEST (Test_dynamic_order_avl_tree_iterator_, TestPreIncrement)
     head->m_right_            = owning_ptr_ (static_cast<base_ptr_> (new_node));
     head->m_right_->m_parent_ = head;
 
-    rethinking_stl::dynamic_order_avl_tree_<int>::dynamic_order_avl_tree_iterator_ head_pos (head);
+    rethinking_stl::dynamic_order_avl_tree_<int>::do_avl_tree_iterator_ head_pos (head);
 
     EXPECT_EQ (*head_pos, 0);
 
@@ -100,7 +100,7 @@ TEST (Test_dynamic_order_avl_tree_iterator_, TestPreIncrement)
     EXPECT_EQ (*head_pos, 1);
 }
 
-TEST (Test_dynamic_order_avl_tree_iterator_, TestPreDecrement)
+TEST (Test_do_avl_tree_iterator_, TestPreDecrement)
 {
     auto head       = new rethinking_stl::do_avl_tree_node_<int> (0);
     head->m_parent_ = head;
@@ -109,7 +109,7 @@ TEST (Test_dynamic_order_avl_tree_iterator_, TestPreDecrement)
     head->m_left_            = owning_ptr_ (static_cast<base_ptr_> (new_node));
     head->m_left_->m_parent_ = head;
 
-    rethinking_stl::dynamic_order_avl_tree_<int>::dynamic_order_avl_tree_iterator_ head_pos (head);
+    rethinking_stl::dynamic_order_avl_tree_<int>::do_avl_tree_iterator_ head_pos (head);
 
     EXPECT_EQ (*head_pos, 0);
 
@@ -118,7 +118,7 @@ TEST (Test_dynamic_order_avl_tree_iterator_, TestPreDecrement)
     EXPECT_EQ (*head_pos, -1);
 }
 
-TEST (Test_dynamic_order_avl_tree_iterator_, TestDecrement)
+TEST (Test_do_avl_tree_iterator_, TestDecrement)
 {
     rethinking_stl::dynamic_order_avl_tree_<int> tree;
 
@@ -137,7 +137,7 @@ TEST (Test_dynamic_order_avl_tree_iterator_, TestDecrement)
     EXPECT_EQ ((--tree.find (2)).m_node_, nullptr);
 }
 
-TEST (Test_dynamic_order_avl_tree_iterator_, TestIncrement)
+TEST (Test_do_avl_tree_iterator_, TestIncrement)
 {
     rethinking_stl::dynamic_order_avl_tree_<int> tree;
 
