@@ -10,10 +10,11 @@
 #include "myset.hpp"
 #include <gtest/gtest.h>
 
-template class my::set<int>;
+template class rethinking_stl::set<int>;
+
 TEST (Test_set, Test_insert_1)
 {
-    my::set<int> set;
+    rethinking_stl::set<int> set;
     std::vector<int> v {10, 9, 8, 7, 6, 5, 4, 3, 2, 1};
 
     for ( auto &i : v )

@@ -21,16 +21,16 @@
 #include <tuple>
 #include <utility>
 
-namespace my
+namespace rethinking_stl
 {
 
-//===============================avl_tree_node_base===============================
-struct avl_tree_node_base_
+//===============================do_avl_tree_node_base===============================
+struct do_avl_tree_node_base_
 {
     using height_diff_t = int;
     using size_type     = std::size_t;
-    using base_ptr_     = avl_tree_node_base_ *;
-    using self_         = avl_tree_node_base_;
+    using base_ptr_     = do_avl_tree_node_base_ *;
+    using self_         = do_avl_tree_node_base_;
     using owning_ptr_   = typename std::unique_ptr<self_>;
 
     height_diff_t m_bf_  = 0;
@@ -65,8 +65,8 @@ struct avl_tree_node_base_
 
     base_ptr_ m_successor_for_erase_ () noexcept;
 
-    base_ptr_ avl_tree_increment_ () noexcept;
-    base_ptr_ avl_tree_decrement_ () noexcept;
+    base_ptr_ dynamic_order_avl_tree_increment_ () noexcept;
+    base_ptr_ dynamic_order_avl_tree_decrement_ () noexcept;
 
     // Fix left imbalance after insertion. Return the new root.
     base_ptr_ m_fix_left_imbalance_insert_ ();
@@ -89,20 +89,20 @@ struct avl_tree_node_base_
 };
 
 // Node type.
-template <typename val_> struct avl_tree_node_ : public avl_tree_node_base_
+template <typename val_> struct do_avl_tree_node_ : public do_avl_tree_node_base_
 {
-    avl_tree_node_ (val_ x_) : avl_tree_node_base_ (), m_key_ (x_) {}
+    do_avl_tree_node_ (val_ x_) : do_avl_tree_node_base_ (), m_key_ (x_) {}
 
     val_ m_key_;
 };
 
 // Helper type offering value initialization guarantee on the compare functor.
-template <class Compare_> struct avl_tree_key_compare_
+template <class Compare_> struct do_avl_tree_key_compare_
 {
     Compare_ m_key_compare_;
 
-    avl_tree_key_compare_ (const Compare_ &comp_) : m_key_compare_ (comp_) {}
-    avl_tree_key_compare_ (avl_tree_key_compare_<Compare_> &&other)
+    do_avl_tree_key_compare_ (const Compare_ &comp_) : m_key_compare_ (comp_) {}
+    do_avl_tree_key_compare_ (do_avl_tree_key_compare_<Compare_> &&other)
     {
         m_key_compare_ = std::move (other.m_key_compare_);
     }
@@ -114,17 +114,17 @@ template <class Compare_> struct avl_tree_key_compare_
 };
 
 // Helper type to manage deafault initialization of node count and header.
-struct avl_tree_header_
+struct do_avl_tree_header_
 {
-    using base_ptr_   = typename avl_tree_node_base_::base_ptr_;
-    using owning_ptr_ = typename avl_tree_node_base_::owning_ptr_;
-    using base_node_  = avl_tree_node_base_;
+    using base_ptr_   = typename do_avl_tree_node_base_::base_ptr_;
+    using owning_ptr_ = typename do_avl_tree_node_base_::owning_ptr_;
+    using base_node_  = do_avl_tree_node_base_;
 
     owning_ptr_ m_header_  = nullptr;
     base_ptr_ m_leftmost_  = nullptr;
     base_ptr_ m_rightmost_ = nullptr;
 
-    avl_tree_header_ () noexcept
+    do_avl_tree_header_ ()
     {
         m_header_ = std::make_unique<base_node_> ();
         m_reset_ ();
@@ -140,21 +140,24 @@ struct avl_tree_header_
     }
 };
 
-//=================================avl_tree_=======================================
-template <typename Key_, class Compare_ = std::less<Key_>>
-struct avl_tree_ : public avl_tree_key_compare_<Compare_>, public avl_tree_header_
+//=================================dynamic_order_avl_tree_=======================================
+template <typename Key_, class Compare_ = std::less<Key_>> struct dynamic_order_avl_tree_
 {
-    using base_key_compare_ = avl_tree_key_compare_<Compare_>;
-    using self_             = avl_tree_<Key_, Compare_>;
+    using key_compare_ = do_avl_tree_key_compare_<Compare_>;
+    using header_      = do_avl_tree_header_;
+    using self_        = dynamic_order_avl_tree_<Key_, Compare_>;
 
-    using base_ptr_   = typename avl_tree_node_base_::base_ptr_;
-    using owning_ptr_ = typename avl_tree_node_base_::owning_ptr_;
-    using node_ptr_   = avl_tree_node_<Key_> *;
-    using base_node_  = avl_tree_node_base_;
+    using base_ptr_   = typename do_avl_tree_node_base_::base_ptr_;
+    using owning_ptr_ = typename do_avl_tree_node_base_::owning_ptr_;
+    using node_ptr_   = do_avl_tree_node_<Key_> *;
+    using base_node_  = do_avl_tree_node_base_;
 
-    using node_ = avl_tree_node_<Key_>;
+    using node_ = do_avl_tree_node_<Key_>;
 
-    struct avl_tree_iterator_
+    key_compare_ m_compare_struct_;
+    header_ m_header_struct_;
+
+    struct do_avl_tree_iterator_
     {
         using value_type = Key_;
         using reference  = Key_ &;
@@ -163,13 +166,13 @@ struct avl_tree_ : public avl_tree_key_compare_<Compare_>, public avl_tree_heade
         using iterator_category = std::bidirectional_iterator_tag;
         using difference_type   = std::ptrdiff_t;
 
-        using self_ = avl_tree_iterator_;
+        using self_ = do_avl_tree_iterator_;
 
-        avl_tree_iterator_ () noexcept : m_node_ (), m_tree_ () {}
+        do_avl_tree_iterator_ () noexcept : m_node_ (), m_tree_ () {}
 
-        explicit avl_tree_iterator_ (base_ptr_ x_) noexcept : m_node_ (x_) {}
+        explicit do_avl_tree_iterator_ (base_ptr_ x_) noexcept : m_node_ (x_) {}
 
-        avl_tree_iterator_ (base_ptr_ x_, const avl_tree_ *tree_) noexcept
+        do_avl_tree_iterator_ (base_ptr_ x_, const dynamic_order_avl_tree_ *tree_) noexcept
             : m_node_ (x_), m_tree_ (tree_) {};
 
         reference operator* () const { return static_cast<node_ptr_> (m_node_)->m_key_; }
@@ -180,27 +183,29 @@ struct avl_tree_ : public avl_tree_key_compare_<Compare_>, public avl_tree_heade
 
         self_ &operator++ () noexcept   // pre-increment
         {
-            m_node_ = m_node_->avl_tree_increment_ ();
+            m_node_ = m_node_->dynamic_order_avl_tree_increment_ ();
             return *this;
         }
 
         self_ operator++ (int) noexcept   // post-increment
         {
             self_ tmp_ = *this;
-            m_node_    = m_node_->avl_tree_increment_ ();
+            m_node_    = m_node_->dynamic_order_avl_tree_increment_ ();
             return tmp_;
         }
 
         self_ &operator-- () noexcept   // pre-decrement
         {
-            m_node_ = (m_node_ ? m_node_->avl_tree_decrement_ () : m_tree_->m_end_ ());
+            m_node_ =
+                (m_node_ ? m_node_->dynamic_order_avl_tree_decrement_ () : m_tree_->m_end_ ());
             return *this;
         }
 
         self_ operator-- (int) noexcept   // post-decrement
         {
             self_ tmp_ = *this;
-            m_node_    = (m_node_ ? m_node_->avl_tree_decrement_ () : m_tree_->m_end_ ());
+            m_node_ =
+                (m_node_ ? m_node_->dynamic_order_avl_tree_decrement_ () : m_tree_->m_end_ ());
             return tmp_;
         }
 
@@ -209,7 +214,7 @@ struct avl_tree_ : public avl_tree_key_compare_<Compare_>, public avl_tree_heade
         bool operator!= (const self_ &other_) const noexcept { return m_node_ != other_.m_node_; }
 
         base_ptr_ m_node_;
-        const avl_tree_ *m_tree_;
+        const dynamic_order_avl_tree_ *m_tree_;
     };
 
   public:
@@ -217,22 +222,22 @@ struct avl_tree_ : public avl_tree_key_compare_<Compare_>, public avl_tree_heade
     using pointer    = value_type *;
     using reference  = value_type &;
 
-    using iterator         = avl_tree_iterator_;
+    using iterator         = do_avl_tree_iterator_;
     using reverse_iterator = std::reverse_iterator<iterator>;
 
-    using size_type     = typename avl_tree_node_base_::size_type;
-    using height_diff_t = typename avl_tree_node_base_::height_diff_t;
+    using size_type     = typename do_avl_tree_node_base_::size_type;
+    using height_diff_t = typename do_avl_tree_node_base_::height_diff_t;
 
   private:
-    base_ptr_ m_root_ () const noexcept { return m_header_->m_left (); }
+    base_ptr_ m_root_ () const noexcept { return m_header_struct_.m_header_->m_left (); }
 
-    base_ptr_ &m_begin_ () noexcept { return m_leftmost_; }
+    base_ptr_ &m_begin_ () noexcept { return m_header_struct_.m_leftmost_; }
 
-    base_ptr_ m_begin_ () const noexcept { return m_leftmost_; }
+    base_ptr_ m_begin_ () const noexcept { return m_header_struct_.m_leftmost_; }
 
-    base_ptr_ &m_end_ () noexcept { return m_rightmost_; }
+    base_ptr_ &m_end_ () noexcept { return m_header_struct_.m_rightmost_; }
 
-    base_ptr_ m_end_ () const noexcept { return m_rightmost_; }
+    base_ptr_ m_end_ () const noexcept { return m_header_struct_.m_rightmost_; }
 
     iterator m_lower_bound_ (base_ptr_ x_, base_ptr_ y_, const value_type &k_);
 
@@ -241,22 +246,25 @@ struct avl_tree_ : public avl_tree_key_compare_<Compare_>, public avl_tree_heade
     static value_type &s_key_ (base_ptr_ node_) { return static_cast<node_ptr_> (node_)->m_key_; }
 
   public:
-    avl_tree_ () : base_key_compare_ (Compare_ {}) {}
-    avl_tree_ (const Compare_ &comp_) : base_key_compare_ (comp_), avl_tree_header_ () {}
-
-    avl_tree_ (const self_ &other)        = delete;
-    self_ &operator= (const self_ &other) = delete;
-
-    avl_tree_ (self_ &&other) noexcept : base_key_compare_ (std::move (other.m_key_compare_))
+    dynamic_order_avl_tree_ () : m_compare_struct_ (Compare_ {}) {}
+    dynamic_order_avl_tree_ (const Compare_ &comp_) : m_compare_struct_ (comp_), m_header_struct_ ()
     {
-        this->m_header_ = std::move (other.m_header_);
-        std::swap (m_leftmost_, other.m_leftmost_);
-        std::swap (m_rightmost_, other.m_rightmost_);
+    }
+
+    dynamic_order_avl_tree_ (const self_ &other) = delete;
+    self_ &operator= (const self_ &other)        = delete;
+
+    dynamic_order_avl_tree_ (self_ &&other) noexcept
+        : m_compare_struct_ (std::move (other.m_compare_struct_.m_key_compare_))
+    {
+        m_header_struct_.m_header_ = std::move (other.m_header_struct_.m_header_);
+        std::swap (m_header_struct_.m_leftmost_, other.m_header_struct_.m_leftmost_);
+        std::swap (m_header_struct_.m_rightmost_, other.m_header_struct_.m_rightmost_);
     }
 
     // Accessors.
 
-    iterator begin () const noexcept { return iterator (m_leftmost_, this); }
+    iterator begin () const noexcept { return iterator (m_header_struct_.m_leftmost_, this); }
 
     iterator end () const noexcept { return iterator (nullptr, this); }
 
@@ -340,7 +348,7 @@ struct avl_tree_ : public avl_tree_key_compare_<Compare_>, public avl_tree_heade
         }
     }
 
-    void clear () noexcept { m_reset_ (); }
+    void clear () noexcept { m_header_struct_.m_reset_ (); }
 
     // Set operations.
     iterator lower_bound (const value_type &k_) { return m_lower_bound_ (m_root_ (), nullptr, k_); }
@@ -361,7 +369,7 @@ struct avl_tree_ : public avl_tree_key_compare_<Compare_>, public avl_tree_heade
 
         auto min_key_ = s_key_ (m_begin_ ());
 
-        if ( this->m_key_compare_ (key_, min_key_) || key_ == min_key_ )
+        if ( this->m_compare_struct_.m_key_compare_ (key_, min_key_) || key_ == min_key_ )
             return 0;
 
         /* Previous element exists. */
@@ -373,12 +381,12 @@ struct avl_tree_ : public avl_tree_key_compare_<Compare_>, public avl_tree_heade
     }
 
   public:
-    bool operator== (const avl_tree_ &other_) const
+    bool operator== (const dynamic_order_avl_tree_ &other_) const
     {
         return size () == other_.size () && std::equal (begin (), end (), other_.begin ());
     }
 
-    bool operator!= (const avl_tree_ &other_) const { return !(*this == other_); }
+    bool operator!= (const dynamic_order_avl_tree_ &other_) const { return !(*this == other_); }
 
     value_type os_select (size_type i) { return m_os_select_ (i); }
 
@@ -420,7 +428,8 @@ struct avl_tree_ : public avl_tree_key_compare_<Compare_>, public avl_tree_heade
 };
 
 template <typename Key_, typename Comp_>
-typename avl_tree_<Key_, Comp_>::value_type avl_tree_<Key_, Comp_>::m_os_select_ (size_type i)
+typename dynamic_order_avl_tree_<Key_, Comp_>::value_type
+dynamic_order_avl_tree_<Key_, Comp_>::m_os_select_ (size_type i)
 {
     if ( i > size () || !i )
         throw std::out_of_range ("i is greater then the size of the tree or zero.");
@@ -447,7 +456,8 @@ typename avl_tree_<Key_, Comp_>::value_type avl_tree_<Key_, Comp_>::m_os_select_
     return s_key_ (curr_);
 }
 template <typename Key_, typename Comp_>
-typename avl_tree_<Key_, Comp_>::size_type avl_tree_<Key_, Comp_>::m_get_rank_of_ (iterator pos_)
+typename dynamic_order_avl_tree_<Key_, Comp_>::size_type
+dynamic_order_avl_tree_<Key_, Comp_>::m_get_rank_of_ (iterator pos_)
 {
     if ( pos_ == end () )
         throw std::out_of_range ("Element with the given key is not inserted.");
@@ -469,9 +479,9 @@ typename avl_tree_<Key_, Comp_>::size_type avl_tree_<Key_, Comp_>::m_get_rank_of
 
 template <typename Key_, typename Comp_>
 template <typename F>
-std::tuple<typename avl_tree_<Key_, Comp_>::base_ptr_, typename avl_tree_<Key_, Comp_>::base_ptr_,
-           bool>
-avl_tree_<Key_, Comp_>::m_trav_bin_search_ (value_type key_, F step_)
+std::tuple<typename dynamic_order_avl_tree_<Key_, Comp_>::base_ptr_,
+           typename dynamic_order_avl_tree_<Key_, Comp_>::base_ptr_, bool>
+dynamic_order_avl_tree_<Key_, Comp_>::m_trav_bin_search_ (value_type key_, F step_)
 {
     using res_ = std::tuple<base_ptr_, base_ptr_, bool>;
 
@@ -484,7 +494,7 @@ avl_tree_<Key_, Comp_>::m_trav_bin_search_ (value_type key_, F step_)
 
     while ( curr_ && s_key_ (curr_) != key_ )
     {
-        key_less_ = this->m_key_compare_ (key_, s_key_ (curr_));
+        key_less_ = this->m_compare_struct_.m_key_compare_ (key_, s_key_ (curr_));
         step_ (curr_);
         prev_ = curr_;
         if ( key_less_ )
@@ -500,17 +510,17 @@ avl_tree_<Key_, Comp_>::m_trav_bin_search_ (value_type key_, F step_)
 }
 
 template <typename Key_, typename Comp_>
-typename avl_tree_<Key_, Comp_>::base_ptr_
-avl_tree_<Key_, Comp_>::m_insert_node_ (owning_ptr_ to_insert_)
+typename dynamic_order_avl_tree_<Key_, Comp_>::base_ptr_
+dynamic_order_avl_tree_<Key_, Comp_>::m_insert_node_ (owning_ptr_ to_insert_)
 {
     auto to_insert_ptr_ = to_insert_.get ();
     if ( empty () )
     {
-        m_header_->m_left_        = std::move (to_insert_);
-        to_insert_ptr_->m_parent_ = m_header_.get ();
+        m_header_struct_.m_header_->m_left_ = std::move (to_insert_);
+        to_insert_ptr_->m_parent_           = m_header_struct_.m_header_.get ();
 
-        m_leftmost_  = to_insert_ptr_;
-        m_rightmost_ = to_insert_ptr_;
+        m_header_struct_.m_leftmost_  = to_insert_ptr_;
+        m_header_struct_.m_rightmost_ = to_insert_ptr_;
 
         return to_insert_ptr_;
     }
@@ -526,24 +536,25 @@ avl_tree_<Key_, Comp_>::m_insert_node_ (owning_ptr_ to_insert_)
     }
     to_insert_->m_parent_ = prev;
 
-    if ( prev == m_header_.get () || prev_greater )
+    if ( prev == m_header_struct_.m_header_.get () || prev_greater )
     {
         prev->m_left_ = std::move (to_insert_);
-        if ( prev == m_leftmost_ )
-            m_leftmost_ = to_insert_ptr_;
+        if ( prev == m_header_struct_.m_leftmost_ )
+            m_header_struct_.m_leftmost_ = to_insert_ptr_;
     }
     else
     {
         prev->m_right_ = std::move (to_insert_);
-        if ( prev == m_rightmost_ )
-            m_rightmost_ = to_insert_ptr_;
+        if ( prev == m_header_struct_.m_rightmost_ )
+            m_header_struct_.m_rightmost_ = to_insert_ptr_;
     }
 
     return to_insert_ptr_;
 }
 
 template <typename Key_, typename Comp_>
-typename avl_tree_<Key_, Comp_>::base_ptr_ avl_tree_<Key_, Comp_>::m_erase_pos_impl_ (iterator pos_)
+typename dynamic_order_avl_tree_<Key_, Comp_>::base_ptr_
+dynamic_order_avl_tree_<Key_, Comp_>::m_erase_pos_impl_ (iterator pos_)
 {
     auto to_erase_    = pos_.m_node_;
     base_ptr_ target_ = nullptr;
@@ -587,7 +598,7 @@ typename avl_tree_<Key_, Comp_>::base_ptr_ avl_tree_<Key_, Comp_>::m_erase_pos_i
 }
 
 template <typename Key_, typename Comp_>
-void avl_tree_<Key_, Comp_>::m_rebalance_after_insert_ (base_ptr_ node_)
+void dynamic_order_avl_tree_<Key_, Comp_>::m_rebalance_after_insert_ (base_ptr_ node_)
 {
 
     /*
@@ -661,7 +672,7 @@ void avl_tree_<Key_, Comp_>::m_rebalance_after_insert_ (base_ptr_ node_)
 }
 
 template <typename Key_, typename Comp_>
-void avl_tree_<Key_, Comp_>::m_rebalance_for_erase_ (base_ptr_ node_)
+void dynamic_order_avl_tree_<Key_, Comp_>::m_rebalance_for_erase_ (base_ptr_ node_)
 {
 
     /*
@@ -725,12 +736,13 @@ void avl_tree_<Key_, Comp_>::m_rebalance_for_erase_ (base_ptr_ node_)
 
 // Accessors.
 template <typename Key_, typename Comp_>
-typename avl_tree_<Key_, Comp_>::iterator
-avl_tree_<Key_, Comp_>::m_lower_bound_ (base_ptr_ x_, base_ptr_ y_, const value_type &k_)
+typename dynamic_order_avl_tree_<Key_, Comp_>::iterator
+dynamic_order_avl_tree_<Key_, Comp_>::m_lower_bound_ (base_ptr_ x_, base_ptr_ y_,
+                                                      const value_type &k_)
 {
     while ( x_ )
     {
-        bool key_bigger_ = this->m_key_compare_ (s_key_ (x_), k_);
+        bool key_bigger_ = this->m_compare_struct_.m_key_compare_ (s_key_ (x_), k_);
         if ( !key_bigger_ )
         {
             y_ = x_;
@@ -743,12 +755,13 @@ avl_tree_<Key_, Comp_>::m_lower_bound_ (base_ptr_ x_, base_ptr_ y_, const value_
 }
 
 template <typename Key_, typename Comp_>
-typename avl_tree_<Key_, Comp_>::iterator
-avl_tree_<Key_, Comp_>::m_upper_bound_ (base_ptr_ x_, base_ptr_ y_, const value_type &k_)
+typename dynamic_order_avl_tree_<Key_, Comp_>::iterator
+dynamic_order_avl_tree_<Key_, Comp_>::m_upper_bound_ (base_ptr_ x_, base_ptr_ y_,
+                                                      const value_type &k_)
 {
     while ( x_ )
     {
-        bool key_less_ = this->m_key_compare_ (k_, s_key_ (x_));
+        bool key_less_ = this->m_compare_struct_.m_key_compare_ (k_, s_key_ (x_));
         if ( key_less_ )
         {
             y_ = x_;
@@ -760,4 +773,4 @@ avl_tree_<Key_, Comp_>::m_upper_bound_ (base_ptr_ x_, base_ptr_ y_, const value_
     return iterator (y_, this);
 }
 
-}   // namespace my
+}   // namespace rethinking_stl

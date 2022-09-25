@@ -12,13 +12,13 @@
 #pragma once
 
 #include "avl_tree.hpp"
-namespace my
+namespace rethinking_stl
 {
 template <typename Key_, typename Compare_ = std::less<Key_>>
-class set : public avl_tree_<Key_, Compare_>
+class set : public dynamic_order_avl_tree_<Key_, Compare_>
 {
   private:
-    using tree_impl_ = avl_tree_<Key_, Compare_>;
+    using tree_impl_ = dynamic_order_avl_tree_<Key_, Compare_>;
 
   public:
     using value_type       = typename tree_impl_::value_type;
@@ -29,4 +29,4 @@ class set : public avl_tree_<Key_, Compare_>
     using reverse_iterator = typename tree_impl_::reverse_iterator;
 };
 
-}   // namespace my
+}   // namespace rethinking_stl
