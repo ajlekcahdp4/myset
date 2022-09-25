@@ -16,27 +16,25 @@ using base_ptr_   = typename rethinking_stl::dynamic_order_avl_tree_<int>::base_
 
 template struct rethinking_stl::dynamic_order_avl_tree_<int>;
 
-TEST (Test_dynamic_order_avl_tree_node_base_, Test_m_maximum_)
+TEST (Test_do_avl_tree_node_base_, Test_m_maximum_)
 {
-    auto head = new rethinking_stl::dynamic_order_avl_tree_node_base_ {0};
+    auto head = new rethinking_stl::do_avl_tree_node_base_ {0};
 
-    head->m_left_  = owning_ptr_ (new rethinking_stl::dynamic_order_avl_tree_node_base_ {-1});
-    head->m_right_ = owning_ptr_ (new rethinking_stl::dynamic_order_avl_tree_node_base_ {1});
-    head->m_right_->m_right_ =
-        owning_ptr_ (new rethinking_stl::dynamic_order_avl_tree_node_base_ {2});
+    head->m_left_            = owning_ptr_ (new rethinking_stl::do_avl_tree_node_base_ {-1});
+    head->m_right_           = owning_ptr_ (new rethinking_stl::do_avl_tree_node_base_ {1});
+    head->m_right_->m_right_ = owning_ptr_ (new rethinking_stl::do_avl_tree_node_base_ {2});
 
     auto max = head->m_maximum_ ();
     EXPECT_EQ (max->m_bf_, 2);
 }
 
-TEST (Test_dynamic_order_avl_tree_node_base_, Test_m_minimum_)
+TEST (Test_do_avl_tree_node_base_, Test_m_minimum_)
 {
-    auto head = new rethinking_stl::dynamic_order_avl_tree_node_base_ {0};
+    auto head = new rethinking_stl::do_avl_tree_node_base_ {0};
 
-    head->m_right_ = owning_ptr_ (new rethinking_stl::dynamic_order_avl_tree_node_base_ {1});
-    head->m_left_  = owning_ptr_ (new rethinking_stl::dynamic_order_avl_tree_node_base_ {-1});
-    head->m_left_->m_left_ =
-        owning_ptr_ (new rethinking_stl::dynamic_order_avl_tree_node_base_ {-2});
+    head->m_right_         = owning_ptr_ (new rethinking_stl::do_avl_tree_node_base_ {1});
+    head->m_left_          = owning_ptr_ (new rethinking_stl::do_avl_tree_node_base_ {-1});
+    head->m_left_->m_left_ = owning_ptr_ (new rethinking_stl::do_avl_tree_node_base_ {-2});
 
     auto max = head->m_minimum_ ();
     EXPECT_EQ (max->m_bf_, -2);
@@ -44,7 +42,7 @@ TEST (Test_dynamic_order_avl_tree_node_base_, Test_m_minimum_)
 
 TEST (Test_dynamic_order_avl_tree_iterator_, TestCtorDeref)
 {
-    auto head = new rethinking_stl::dynamic_order_avl_tree_node_<int> (666);
+    auto head = new rethinking_stl::do_avl_tree_node_<int> (666);
 
     rethinking_stl::dynamic_order_avl_tree_<int>::dynamic_order_avl_tree_iterator_ pos (head);
 
@@ -59,7 +57,7 @@ struct entry
 TEST (Test_dynamic_order_avl_tree_iterator_, TestArrowOperator)
 {
     entry b   = {9};
-    auto head = new rethinking_stl::dynamic_order_avl_tree_node_<entry> (b);
+    auto head = new rethinking_stl::do_avl_tree_node_<entry> (b);
 
     rethinking_stl::dynamic_order_avl_tree_<entry>::dynamic_order_avl_tree_iterator_ pos (head);
 
@@ -68,10 +66,10 @@ TEST (Test_dynamic_order_avl_tree_iterator_, TestArrowOperator)
 
 TEST (Test_dynamic_order_avl_tree_iterator_, TestPostIncrement)
 {
-    auto head       = new rethinking_stl::dynamic_order_avl_tree_node_<int> (0);
+    auto head       = new rethinking_stl::do_avl_tree_node_<int> (0);
     head->m_parent_ = head;
 
-    auto new_node             = new rethinking_stl::dynamic_order_avl_tree_node_<int> (1);
+    auto new_node             = new rethinking_stl::do_avl_tree_node_<int> (1);
     head->m_right_            = owning_ptr_ (static_cast<base_ptr_> (new_node));
     head->m_right_->m_parent_ = head;
 
@@ -86,10 +84,10 @@ TEST (Test_dynamic_order_avl_tree_iterator_, TestPostIncrement)
 
 TEST (Test_dynamic_order_avl_tree_iterator_, TestPreIncrement)
 {
-    auto head       = new rethinking_stl::dynamic_order_avl_tree_node_<int> (0);
+    auto head       = new rethinking_stl::do_avl_tree_node_<int> (0);
     head->m_parent_ = head;
 
-    auto new_node             = new rethinking_stl::dynamic_order_avl_tree_node_<int> (1);
+    auto new_node             = new rethinking_stl::do_avl_tree_node_<int> (1);
     head->m_right_            = owning_ptr_ (static_cast<base_ptr_> (new_node));
     head->m_right_->m_parent_ = head;
 
@@ -104,10 +102,10 @@ TEST (Test_dynamic_order_avl_tree_iterator_, TestPreIncrement)
 
 TEST (Test_dynamic_order_avl_tree_iterator_, TestPreDecrement)
 {
-    auto head       = new rethinking_stl::dynamic_order_avl_tree_node_<int> (0);
+    auto head       = new rethinking_stl::do_avl_tree_node_<int> (0);
     head->m_parent_ = head;
 
-    auto new_node            = new rethinking_stl::dynamic_order_avl_tree_node_<int> (-1);
+    auto new_node            = new rethinking_stl::do_avl_tree_node_<int> (-1);
     head->m_left_            = owning_ptr_ (static_cast<base_ptr_> (new_node));
     head->m_left_->m_parent_ = head;
 

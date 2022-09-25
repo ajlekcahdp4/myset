@@ -13,8 +13,8 @@
 namespace rethinking_stl
 {
 
-typename dynamic_order_avl_tree_node_base_::base_ptr_
-dynamic_order_avl_tree_node_base_::m_predecessor_for_erase_ () noexcept
+typename do_avl_tree_node_base_::base_ptr_
+do_avl_tree_node_base_::m_predecessor_for_erase_ () noexcept
 {
     auto curr_ = this;
 
@@ -48,8 +48,8 @@ dynamic_order_avl_tree_node_base_::m_predecessor_for_erase_ () noexcept
     return parent_;
 }
 
-typename dynamic_order_avl_tree_node_base_::base_ptr_
-dynamic_order_avl_tree_node_base_::m_successor_for_erase_ () noexcept
+typename do_avl_tree_node_base_::base_ptr_
+do_avl_tree_node_base_::m_successor_for_erase_ () noexcept
 {
     auto curr_ = this;
 
@@ -83,8 +83,8 @@ dynamic_order_avl_tree_node_base_::m_successor_for_erase_ () noexcept
     return parent_;
 }
 
-typename dynamic_order_avl_tree_node_base_::base_ptr_
-dynamic_order_avl_tree_node_base_::dynamic_order_avl_tree_increment_ () noexcept
+typename do_avl_tree_node_base_::base_ptr_
+do_avl_tree_node_base_::dynamic_order_avl_tree_increment_ () noexcept
 {
     auto curr_ = this;
     if ( curr_->m_right_ )
@@ -106,8 +106,8 @@ dynamic_order_avl_tree_node_base_::dynamic_order_avl_tree_increment_ () noexcept
     return curr_;
 }
 
-typename dynamic_order_avl_tree_node_base_::base_ptr_
-dynamic_order_avl_tree_node_base_::dynamic_order_avl_tree_decrement_ () noexcept
+typename do_avl_tree_node_base_::base_ptr_
+do_avl_tree_node_base_::dynamic_order_avl_tree_decrement_ () noexcept
 {
     auto curr_ = this;
 
@@ -129,8 +129,7 @@ dynamic_order_avl_tree_node_base_::dynamic_order_avl_tree_decrement_ () noexcept
     return curr_;
 }
 
-dynamic_order_avl_tree_node_base_::base_ptr_
-dynamic_order_avl_tree_node_base_::m_fix_left_imbalance_insert_ ()
+do_avl_tree_node_base_::base_ptr_ do_avl_tree_node_base_::m_fix_left_imbalance_insert_ ()
 {
     auto curr_ = this;
 
@@ -168,8 +167,7 @@ dynamic_order_avl_tree_node_base_::m_fix_left_imbalance_insert_ ()
     return curr_;
 }
 
-dynamic_order_avl_tree_node_base_::base_ptr_
-dynamic_order_avl_tree_node_base_::m_fix_right_imbalance_insert_ ()
+do_avl_tree_node_base_::base_ptr_ do_avl_tree_node_base_::m_fix_right_imbalance_insert_ ()
 {
     auto curr_ = this;
 
@@ -207,8 +205,7 @@ dynamic_order_avl_tree_node_base_::m_fix_right_imbalance_insert_ ()
     return curr_;
 }
 
-dynamic_order_avl_tree_node_base_::base_ptr_
-dynamic_order_avl_tree_node_base_::m_fix_right_imbalance_erase_ ()
+do_avl_tree_node_base_::base_ptr_ do_avl_tree_node_base_::m_fix_right_imbalance_erase_ ()
 {
     auto curr_      = this;
     auto rchild_bf_ = curr_->m_right_->m_bf_;
@@ -256,8 +253,7 @@ dynamic_order_avl_tree_node_base_::m_fix_right_imbalance_erase_ ()
     return curr_;
 }
 
-dynamic_order_avl_tree_node_base_::base_ptr_
-dynamic_order_avl_tree_node_base_::m_fix_left_imbalance_erase_ ()
+do_avl_tree_node_base_::base_ptr_ do_avl_tree_node_base_::m_fix_left_imbalance_erase_ ()
 {
     auto curr_      = this;
     auto lchild_bf_ = curr_->m_left_->m_bf_;
@@ -305,7 +301,7 @@ dynamic_order_avl_tree_node_base_::m_fix_left_imbalance_erase_ ()
     return curr_;
 }
 
-dynamic_order_avl_tree_node_base_::base_ptr_ dynamic_order_avl_tree_node_base_::rotate_left_ ()
+do_avl_tree_node_base_::base_ptr_ do_avl_tree_node_base_::rotate_left_ ()
 {
     auto node_       = this;
     auto parent_     = this->m_parent_;
@@ -337,7 +333,7 @@ dynamic_order_avl_tree_node_base_::base_ptr_ dynamic_order_avl_tree_node_base_::
     return rchild_ptr_;
 }
 
-dynamic_order_avl_tree_node_base_::base_ptr_ dynamic_order_avl_tree_node_base_::rotate_right_ ()
+do_avl_tree_node_base_::base_ptr_ do_avl_tree_node_base_::rotate_right_ ()
 {
     auto node_       = this;
     auto parent_     = this->m_parent_;

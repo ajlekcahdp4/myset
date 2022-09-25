@@ -24,13 +24,13 @@
 namespace rethinking_stl
 {
 
-//===============================dynamic_order_avl_tree_node_base===============================
-struct dynamic_order_avl_tree_node_base_
+//===============================do_avl_tree_node_base===============================
+struct do_avl_tree_node_base_
 {
     using height_diff_t = int;
     using size_type     = std::size_t;
-    using base_ptr_     = dynamic_order_avl_tree_node_base_ *;
-    using self_         = dynamic_order_avl_tree_node_base_;
+    using base_ptr_     = do_avl_tree_node_base_ *;
+    using self_         = do_avl_tree_node_base_;
     using owning_ptr_   = typename std::unique_ptr<self_>;
 
     height_diff_t m_bf_  = 0;
@@ -89,21 +89,20 @@ struct dynamic_order_avl_tree_node_base_
 };
 
 // Node type.
-template <typename val_>
-struct dynamic_order_avl_tree_node_ : public dynamic_order_avl_tree_node_base_
+template <typename val_> struct do_avl_tree_node_ : public do_avl_tree_node_base_
 {
-    dynamic_order_avl_tree_node_ (val_ x_) : dynamic_order_avl_tree_node_base_ (), m_key_ (x_) {}
+    do_avl_tree_node_ (val_ x_) : do_avl_tree_node_base_ (), m_key_ (x_) {}
 
     val_ m_key_;
 };
 
 // Helper type offering value initialization guarantee on the compare functor.
-template <class Compare_> struct dynamic_order_avl_tree_key_compare_
+template <class Compare_> struct do_avl_tree_key_compare_compare_
 {
     Compare_ m_key_compare_;
 
-    dynamic_order_avl_tree_key_compare_ (const Compare_ &comp_) : m_key_compare_ (comp_) {}
-    dynamic_order_avl_tree_key_compare_ (dynamic_order_avl_tree_key_compare_<Compare_> &&other)
+    do_avl_tree_key_compare_compare_ (const Compare_ &comp_) : m_key_compare_ (comp_) {}
+    do_avl_tree_key_compare_compare_ (do_avl_tree_key_compare_compare_<Compare_> &&other)
     {
         m_key_compare_ = std::move (other.m_key_compare_);
     }
@@ -115,17 +114,17 @@ template <class Compare_> struct dynamic_order_avl_tree_key_compare_
 };
 
 // Helper type to manage deafault initialization of node count and header.
-struct dynamic_order_avl_tree_header_
+struct do_avl_tree_header_
 {
-    using base_ptr_   = typename dynamic_order_avl_tree_node_base_::base_ptr_;
-    using owning_ptr_ = typename dynamic_order_avl_tree_node_base_::owning_ptr_;
-    using base_node_  = dynamic_order_avl_tree_node_base_;
+    using base_ptr_   = typename do_avl_tree_node_base_::base_ptr_;
+    using owning_ptr_ = typename do_avl_tree_node_base_::owning_ptr_;
+    using base_node_  = do_avl_tree_node_base_;
 
     owning_ptr_ m_header_  = nullptr;
     base_ptr_ m_leftmost_  = nullptr;
     base_ptr_ m_rightmost_ = nullptr;
 
-    dynamic_order_avl_tree_header_ ()
+    do_avl_tree_header_ ()
     {
         m_header_ = std::make_unique<base_node_> ();
         m_reset_ ();
@@ -143,18 +142,18 @@ struct dynamic_order_avl_tree_header_
 
 //=================================dynamic_order_avl_tree_=======================================
 template <typename Key_, class Compare_ = std::less<Key_>>
-struct dynamic_order_avl_tree_ : public dynamic_order_avl_tree_key_compare_<Compare_>,
-                                 public dynamic_order_avl_tree_header_
+struct dynamic_order_avl_tree_ : public do_avl_tree_key_compare_compare_<Compare_>,
+                                 public do_avl_tree_header_
 {
-    using base_key_compare_ = dynamic_order_avl_tree_key_compare_<Compare_>;
+    using base_key_compare_ = do_avl_tree_key_compare_compare_<Compare_>;
     using self_             = dynamic_order_avl_tree_<Key_, Compare_>;
 
-    using base_ptr_   = typename dynamic_order_avl_tree_node_base_::base_ptr_;
-    using owning_ptr_ = typename dynamic_order_avl_tree_node_base_::owning_ptr_;
-    using node_ptr_   = dynamic_order_avl_tree_node_<Key_> *;
-    using base_node_  = dynamic_order_avl_tree_node_base_;
+    using base_ptr_   = typename do_avl_tree_node_base_::base_ptr_;
+    using owning_ptr_ = typename do_avl_tree_node_base_::owning_ptr_;
+    using node_ptr_   = do_avl_tree_node_<Key_> *;
+    using base_node_  = do_avl_tree_node_base_;
 
-    using node_ = dynamic_order_avl_tree_node_<Key_>;
+    using node_ = do_avl_tree_node_<Key_>;
 
     struct dynamic_order_avl_tree_iterator_
     {
@@ -225,8 +224,8 @@ struct dynamic_order_avl_tree_ : public dynamic_order_avl_tree_key_compare_<Comp
     using iterator         = dynamic_order_avl_tree_iterator_;
     using reverse_iterator = std::reverse_iterator<iterator>;
 
-    using size_type     = typename dynamic_order_avl_tree_node_base_::size_type;
-    using height_diff_t = typename dynamic_order_avl_tree_node_base_::height_diff_t;
+    using size_type     = typename do_avl_tree_node_base_::size_type;
+    using height_diff_t = typename do_avl_tree_node_base_::height_diff_t;
 
   private:
     base_ptr_ m_root_ () const noexcept { return m_header_->m_left (); }
@@ -248,7 +247,7 @@ struct dynamic_order_avl_tree_ : public dynamic_order_avl_tree_key_compare_<Comp
   public:
     dynamic_order_avl_tree_ () : base_key_compare_ (Compare_ {}) {}
     dynamic_order_avl_tree_ (const Compare_ &comp_)
-        : base_key_compare_ (comp_), dynamic_order_avl_tree_header_ ()
+        : base_key_compare_ (comp_), do_avl_tree_header_ ()
     {
     }
 
