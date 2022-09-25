@@ -15,10 +15,10 @@
 namespace rethinking_stl
 {
 template <typename Key_, typename Compare_ = std::less<Key_>>
-class set : public avl_tree_<Key_, Compare_>
+class set : public dynamic_order_avl_tree_<Key_, Compare_>
 {
   private:
-    using tree_impl_ = avl_tree_<Key_, Compare_>;
+    using tree_impl_ = dynamic_order_avl_tree_<Key_, Compare_>;
 
   public:
     using value_type       = typename tree_impl_::value_type;
