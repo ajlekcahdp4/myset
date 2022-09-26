@@ -10,8 +10,6 @@
 #include "myset.hpp"
 #include <gtest/gtest.h>
 
-template class rethinking_stl::set<int>;
-
 TEST (Test_set, Test_insert_1)
 {
     rethinking_stl::set<int> set;

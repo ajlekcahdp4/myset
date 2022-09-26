@@ -2,8 +2,6 @@
 #include <iostream>
 #include <sstream>
 
-template class rethinking_stl::set<int>;
-
 int main ()
 {
     rethinking_stl::set<int> set_ {};

@@ -15,18 +15,6 @@
 namespace rethinking_stl
 {
 template <typename Key_, typename Compare_ = std::less<Key_>>
-class set : public dynamic_order_avl_tree_<Key_, Compare_>
-{
-  private:
-    using tree_impl_ = dynamic_order_avl_tree_<Key_, Compare_>;
-
-  public:
-    using value_type       = typename tree_impl_::value_type;
-    using reference        = typename tree_impl_::reference;
-    using pointer          = typename tree_impl_::pointer;
-    using size_type        = typename tree_impl_::size_type;
-    using iterator         = typename tree_impl_::iterator;
-    using reverse_iterator = typename tree_impl_::reverse_iterator;
-};
+using set = dynamic_order_avl_tree_<Key_, Compare_>;
 
 }   // namespace rethinking_stl
