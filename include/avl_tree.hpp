@@ -24,76 +24,73 @@
 namespace rethinking_stl
 {
 
-//===============================do_avl_tree_node_base===============================
-struct do_avl_tree_node_base_
+//===============================do_avl_tree_node_===============================
+template <typename Val_> struct do_avl_tree_node_
 {
     using height_diff_t = int;
+    using value_type    = Val_;
     using size_type     = std::size_t;
-    using base_ptr_     = do_avl_tree_node_base_ *;
-    using self_         = do_avl_tree_node_base_;
+    using node_ptr_     = do_avl_tree_node_<Val_> *;
+    using self_         = do_avl_tree_node_<Val_>;
     using owning_ptr_   = typename std::unique_ptr<self_>;
 
     height_diff_t m_bf_  = 0;
     size_type m_size_    = 1;
-    base_ptr_ m_parent_  = nullptr;
+    node_ptr_ m_parent_  = nullptr;
     owning_ptr_ m_left_  = nullptr;
     owning_ptr_ m_right_ = nullptr;
+    value_type m_key_;
 
-    static size_type size (base_ptr_ node_) { return (node_ ? node_->m_size_ : 0); }
+    do_avl_tree_node_ (value_type val_) : m_key_ {val_} {}
+    do_avl_tree_node_ () {}
 
-    base_ptr_ m_left () noexcept { return m_left_.get (); }
+    static size_type size (node_ptr_ node_) { return (node_ ? node_->m_size_ : 0); }
 
-    base_ptr_ m_right () noexcept { return m_right_.get (); }
+    node_ptr_ m_left () noexcept { return m_left_.get (); }
 
-    base_ptr_ m_minimum_ () noexcept
+    node_ptr_ m_right () noexcept { return m_right_.get (); }
+
+    node_ptr_ m_minimum_ () noexcept
     {
-        base_ptr_ x_ = this;
+        node_ptr_ x_ = this;
         while ( x_->m_left () )
             x_ = x_->m_left ();
         return x_;
     }
 
-    base_ptr_ m_maximum_ () noexcept
+    node_ptr_ m_maximum_ () noexcept
     {
-        base_ptr_ x_ = this;
+        node_ptr_ x_ = this;
         while ( x_->m_right () )
             x_ = x_->m_right ();
         return x_;
     }
 
-    base_ptr_ m_predecessor_for_erase_ () noexcept;
+    node_ptr_ m_predecessor_for_erase_ () noexcept;
 
-    base_ptr_ m_successor_for_erase_ () noexcept;
+    node_ptr_ m_successor_for_erase_ () noexcept;
 
-    base_ptr_ dynamic_order_avl_tree_increment_ () noexcept;
-    base_ptr_ dynamic_order_avl_tree_decrement_ () noexcept;
+    node_ptr_ dynamic_order_avl_tree_increment_ () noexcept;
+    node_ptr_ dynamic_order_avl_tree_decrement_ () noexcept;
 
     // Fix left imbalance after insertion. Return the new root.
-    base_ptr_ m_fix_left_imbalance_insert_ ();
+    node_ptr_ m_fix_left_imbalance_insert_ ();
     // Fix right imbalance after insertion. Return the new root.
-    base_ptr_ m_fix_right_imbalance_insert_ ();
+    node_ptr_ m_fix_right_imbalance_insert_ ();
 
     // Fix left imbalance for erase. Return the new root.
-    base_ptr_ m_fix_left_imbalance_erase_ ();
+    node_ptr_ m_fix_left_imbalance_erase_ ();
 
     // Fixright imbalance for erase. Return the new root.
-    base_ptr_ m_fix_right_imbalance_erase_ ();
+    node_ptr_ m_fix_right_imbalance_erase_ ();
 
-    base_ptr_ rotate_left_ ();
-    base_ptr_ rotate_right_ ();
+    node_ptr_ rotate_left_ ();
+    node_ptr_ rotate_right_ ();
 
     bool is_left_child_ () const noexcept
     {
         return (m_parent_ ? this == m_parent_->m_left () : false);
     }
-};
-
-// Node type.
-template <typename val_> struct do_avl_tree_node_ : public do_avl_tree_node_base_
-{
-    do_avl_tree_node_ (val_ x_) : do_avl_tree_node_base_ (), m_key_ (x_) {}
-
-    val_ m_key_;
 };
 
 // Helper type offering value initialization guarantee on the compare functor.
@@ -114,19 +111,19 @@ template <class Compare_> struct do_avl_tree_key_compare_
 };
 
 // Helper type to manage deafault initialization of node count and header.
-struct do_avl_tree_header_
+template <typename Val_> struct do_avl_tree_header_
 {
-    using base_ptr_   = typename do_avl_tree_node_base_::base_ptr_;
-    using owning_ptr_ = typename do_avl_tree_node_base_::owning_ptr_;
-    using base_node_  = do_avl_tree_node_base_;
+    using node_ptr_   = typename do_avl_tree_node_<Val_>::node_ptr_;
+    using owning_ptr_ = typename do_avl_tree_node_<Val_>::owning_ptr_;
+    using node_       = do_avl_tree_node_<Val_>;
 
     owning_ptr_ m_header_  = nullptr;
-    base_ptr_ m_leftmost_  = nullptr;
-    base_ptr_ m_rightmost_ = nullptr;
+    node_ptr_ m_leftmost_  = nullptr;
+    node_ptr_ m_rightmost_ = nullptr;
 
     do_avl_tree_header_ ()
     {
-        m_header_ = std::make_unique<base_node_> ();
+        m_header_ = std::make_unique<node_> ();
         m_reset_ ();
     }
 
@@ -144,13 +141,11 @@ struct do_avl_tree_header_
 template <typename Key_, class Compare_ = std::less<Key_>> struct dynamic_order_avl_tree_
 {
     using key_compare_ = do_avl_tree_key_compare_<Compare_>;
-    using header_      = do_avl_tree_header_;
+    using header_      = do_avl_tree_header_<Key_>;
     using self_        = dynamic_order_avl_tree_<Key_, Compare_>;
 
-    using base_ptr_   = typename do_avl_tree_node_base_::base_ptr_;
-    using owning_ptr_ = typename do_avl_tree_node_base_::owning_ptr_;
-    using node_ptr_   = do_avl_tree_node_<Key_> *;
-    using base_node_  = do_avl_tree_node_base_;
+    using node_ptr_   = typename do_avl_tree_node_<Key_>::node_ptr_;
+    using owning_ptr_ = typename do_avl_tree_node_<Key_>::owning_ptr_;
 
     using node_ = do_avl_tree_node_<Key_>;
 
@@ -170,9 +165,9 @@ template <typename Key_, class Compare_ = std::less<Key_>> struct dynamic_order_
 
         do_avl_tree_iterator_ () noexcept : m_node_ (), m_tree_ () {}
 
-        explicit do_avl_tree_iterator_ (base_ptr_ x_) noexcept : m_node_ (x_) {}
+        explicit do_avl_tree_iterator_ (node_ptr_ x_) noexcept : m_node_ (x_) {}
 
-        do_avl_tree_iterator_ (base_ptr_ x_, const dynamic_order_avl_tree_ *tree_) noexcept
+        do_avl_tree_iterator_ (node_ptr_ x_, const dynamic_order_avl_tree_ *tree_) noexcept
             : m_node_ (x_), m_tree_ (tree_) {};
 
         reference operator* () const { return static_cast<node_ptr_> (m_node_)->m_key_; }
@@ -213,7 +208,7 @@ template <typename Key_, class Compare_ = std::less<Key_>> struct dynamic_order_
 
         bool operator!= (const self_ &other_) const noexcept { return m_node_ != other_.m_node_; }
 
-        base_ptr_ m_node_;
+        node_ptr_ m_node_;
         const dynamic_order_avl_tree_ *m_tree_;
     };
 
@@ -225,28 +220,28 @@ template <typename Key_, class Compare_ = std::less<Key_>> struct dynamic_order_
     using iterator         = do_avl_tree_iterator_;
     using reverse_iterator = std::reverse_iterator<iterator>;
 
-    using size_type     = typename do_avl_tree_node_base_::size_type;
-    using height_diff_t = typename do_avl_tree_node_base_::height_diff_t;
+    using size_type     = typename node_::size_type;
+    using height_diff_t = typename node_::height_diff_t;
 
   private:
-    base_ptr_ m_root_ () const noexcept { return m_header_struct_.m_header_->m_left (); }
+    node_ptr_ m_root_ () const noexcept { return m_header_struct_.m_header_->m_left (); }
 
-    base_ptr_ &m_begin_ () noexcept { return m_header_struct_.m_leftmost_; }
+    node_ptr_ &m_begin_ () noexcept { return m_header_struct_.m_leftmost_; }
 
-    base_ptr_ m_begin_ () const noexcept { return m_header_struct_.m_leftmost_; }
+    node_ptr_ m_begin_ () const noexcept { return m_header_struct_.m_leftmost_; }
 
-    base_ptr_ &m_end_ () noexcept { return m_header_struct_.m_rightmost_; }
+    node_ptr_ &m_end_ () noexcept { return m_header_struct_.m_rightmost_; }
 
-    base_ptr_ m_end_ () const noexcept { return m_header_struct_.m_rightmost_; }
+    node_ptr_ m_end_ () const noexcept { return m_header_struct_.m_rightmost_; }
 
-    iterator m_lower_bound_ (base_ptr_ x_, base_ptr_ y_, const value_type &k_);
+    iterator m_lower_bound_ (node_ptr_ x_, node_ptr_ y_, const value_type &k_);
 
-    iterator m_upper_bound_ (base_ptr_ x_, base_ptr_ y_, const value_type &k_);
+    iterator m_upper_bound_ (node_ptr_ x_, node_ptr_ y_, const value_type &k_);
 
-    static value_type &s_key_ (base_ptr_ node_) { return static_cast<node_ptr_> (node_)->m_key_; }
+    static value_type &s_key_ (node_ptr_ node_) { return static_cast<node_ptr_> (node_)->m_key_; }
 
   public:
-    dynamic_order_avl_tree_ () : m_compare_struct_ (Compare_ {}) {}
+    dynamic_order_avl_tree_ () : m_compare_struct_ (Compare_ {}), m_header_struct_ () {}
     dynamic_order_avl_tree_ (const Compare_ &comp_) : m_compare_struct_ (comp_), m_header_struct_ ()
     {
     }
@@ -275,25 +270,25 @@ template <typename Key_, class Compare_ = std::less<Key_>> struct dynamic_order_
     size_type size () const noexcept
     {
         auto root_ = m_root_ ();
-        return (root_ ? base_node_::size (root_) : 0);
+        return (root_ ? node_::size (root_) : 0);
     }
 
     bool empty () const noexcept { return (size () == 0); }
 
     template <typename F>
-    std::tuple<base_ptr_, base_ptr_, bool> m_trav_bin_search_ (value_type key_, F step_);
+    std::tuple<node_ptr_, node_ptr_, bool> m_trav_bin_search_ (value_type key_, F step_);
 
     // Insert/erase.
 
   private:
     // Insert node in AVL tree without rebalancing.
-    base_ptr_ m_insert_node_ (owning_ptr_ to_insert_);
+    node_ptr_ m_insert_node_ (owning_ptr_ to_insert_);
 
     // create node, insert and rebalance tree
     iterator m_insert_ (const value_type &key_)
     {
         auto to_insert_             = new node_ (key_);
-        auto to_insert_base_unique_ = owning_ptr_ (static_cast<base_ptr_> (to_insert_));
+        auto to_insert_base_unique_ = owning_ptr_ (static_cast<node_ptr_> (to_insert_));
 
         auto res = m_insert_node_ (std::move (to_insert_base_unique_));
         m_rebalance_after_insert_ (res);
@@ -302,32 +297,33 @@ template <typename Key_, class Compare_ = std::less<Key_>> struct dynamic_order_
     }
 
     // Rebalance subtree after insert.
-    void m_rebalance_after_insert_ (base_ptr_ leaf_);
+    void m_rebalance_after_insert_ (node_ptr_ leaf_);
 
-    base_ptr_ m_erase_pos_ (iterator to_erase_pos_) { return m_erase_pos_impl_ (to_erase_pos_); }
+    node_ptr_ m_erase_pos_ (iterator to_erase_pos_) { return m_erase_pos_impl_ (to_erase_pos_); }
 
     // Rebalance tree for erase.
-    void m_rebalance_for_erase_ (base_ptr_ node_);
+    void m_rebalance_for_erase_ (node_ptr_ node_);
 
     // erase node from the container.
-    base_ptr_ m_erase_pos_impl_ (iterator pos_);
+    node_ptr_ m_erase_pos_impl_ (iterator pos_);
 
   public:
     iterator find (const value_type &key_)
     {
-        auto tuple_ = m_trav_bin_search_ (key_, [] (base_ptr_ &) {});
-        return iterator (std::get<0> (tuple_), this);
+        auto [found, prev, prev_greater] = m_trav_bin_search_ (key_, [] (node_ptr_ &) {});
+        return iterator (found, this);
     }
 
     iterator m_find_for_erase_ (const value_type &key_)
     {
-        auto tuple_ = m_trav_bin_search_ (key_, [] (base_ptr_ &node_) { node_->m_size_--; });
-        auto node_  = std::get<0> (tuple_);
+        auto [found, prev, prev_greater] =
+            m_trav_bin_search_ (key_, [] (node_ptr_ &node_) { node_->m_size_--; });
+        auto node_ = found;
 
         if ( node_ )
             return iterator (node_, this);
 
-        m_trav_bin_search_ (key_, [] (base_ptr_ &node_) { node_->m_size_++; });
+        m_trav_bin_search_ (key_, [] (node_ptr_ &node_) { node_->m_size_++; });
         throw std::out_of_range ("No element with requested key for erase.");
     }
 
@@ -343,7 +339,7 @@ template <typename Key_, class Compare_ = std::less<Key_>> struct dynamic_order_
     {
         if ( pos_ != end () )
         {
-            m_trav_bin_search_ (*pos_, [] (base_ptr_ &node_) { node_->m_size_--; });
+            m_trav_bin_search_ (*pos_, [] (node_ptr_ &node_) { node_->m_size_--; });
             m_erase_pos_ (pos_);
         }
     }
@@ -427,6 +423,369 @@ template <typename Key_, class Compare_ = std::less<Key_>> struct dynamic_order_
     }
 };
 
+template <typename Val_>
+typename do_avl_tree_node_<Val_>::node_ptr_
+do_avl_tree_node_<Val_>::m_predecessor_for_erase_ () noexcept
+{
+    auto curr_ = this;
+
+    if ( m_left_ )
+    {
+        /*
+         * Move down until we find it.
+         * Also have to decrease ich node size.
+         */
+
+        curr_ = m_left ();
+        while ( curr_->m_right_ )
+        {
+            curr_->m_size_--;
+            curr_ = curr_->m_right ();
+        }
+        return curr_;
+    }
+
+    /* move up until we find it or reach the root. */
+    for ( ; curr_->m_parent_->m_parent_ && curr_->is_left_child_ (); curr_ = curr_->m_parent_ )
+    {
+        ;
+    }
+
+    auto parent_ = curr_->m_parent_;
+
+    if ( !parent_->m_parent_ ) /* curr_ is a root */
+        return nullptr;
+
+    return parent_;
+}
+
+template <typename Val_>
+typename do_avl_tree_node_<Val_>::node_ptr_
+do_avl_tree_node_<Val_>::m_successor_for_erase_ () noexcept
+{
+    auto curr_ = this;
+
+    if ( m_right_ )
+    {
+        /*
+         * Move down until we find it.
+         * Also have to decrease ich node size.
+         */
+
+        curr_ = m_right ();
+        while ( curr_->m_left_ )
+        {
+            curr_->m_size_--;
+            curr_ = curr_->m_left ();
+        }
+        return curr_;
+    }
+
+    /* move up until we find it or reach the root. */
+    for ( ; curr_->m_parent_->m_parent_ && !curr_->is_left_child_ (); curr_ = curr_->m_parent_ )
+    {
+        ;
+    }
+
+    auto parent_ = curr_->m_parent_;
+
+    if ( !parent_->m_parent_ ) /* curr_ is a root */
+        return nullptr;
+
+    return parent_;
+}
+
+template <typename Val_>
+typename do_avl_tree_node_<Val_>::node_ptr_
+do_avl_tree_node_<Val_>::dynamic_order_avl_tree_increment_ () noexcept
+{
+    auto curr_ = this;
+    if ( curr_->m_right_ )
+
+        return curr_->m_right_->m_minimum_ ();
+
+    node_ptr_ prev_ = curr_->m_parent_;
+
+    /*       while not root      */
+    while ( prev_->m_parent_ && !curr_->is_left_child_ () )
+    {
+        curr_ = prev_;
+        prev_ = prev_->m_parent_;
+    }
+    if ( prev_->m_parent_ )
+        curr_ = prev_;
+    else
+        curr_ = nullptr;
+    return curr_;
+}
+
+template <typename Val_>
+typename do_avl_tree_node_<Val_>::node_ptr_
+do_avl_tree_node_<Val_>::dynamic_order_avl_tree_decrement_ () noexcept
+{
+    auto curr_ = this;
+
+    if ( curr_->m_left_ )
+        return curr_->m_left_->m_maximum_ ();
+
+    node_ptr_ prev_ = curr_->m_parent_;
+    /*       while not root      */
+    while ( prev_->m_parent_ && curr_ == prev_->m_left () )
+    {
+        curr_ = prev_;
+        prev_ = prev_->m_parent_;
+    }
+    if ( prev_->m_parent_ )
+        curr_ = prev_;
+    else
+        curr_ = nullptr;
+
+    return curr_;
+}
+
+template <typename Val_>
+typename do_avl_tree_node_<Val_>::node_ptr_ do_avl_tree_node_<Val_>::m_fix_left_imbalance_insert_ ()
+{
+    auto curr_ = this;
+
+    if ( curr_->m_left_->m_bf_ == curr_->m_bf_ )
+    {
+        curr_                  = curr_->rotate_right_ ();
+        curr_->m_bf_           = 0;
+        curr_->m_right_->m_bf_ = 0;
+    }
+    else
+    {
+        auto old_bf_ = curr_->m_left_->m_right_->m_bf_;
+        curr_->m_left_->rotate_left_ ();
+        curr_        = curr_->rotate_right_ ();
+        curr_->m_bf_ = 0;
+
+        if ( old_bf_ == -1 )
+        {
+            curr_->m_left_->m_bf_  = 0;
+            curr_->m_right_->m_bf_ = 1;
+        }
+        else if ( old_bf_ == 1 )
+        {
+            curr_->m_left_->m_bf_  = -1;
+            curr_->m_right_->m_bf_ = 0;
+        }
+        else if ( old_bf_ == 0 )
+        {
+            curr_->m_left_->m_bf_  = 0;
+            curr_->m_right_->m_bf_ = 0;
+        }
+        else
+            throw std::out_of_range ("Unexpected value of balance factor");
+    }
+    return curr_;
+}
+
+template <typename Val_>
+typename do_avl_tree_node_<Val_>::node_ptr_
+do_avl_tree_node_<Val_>::m_fix_right_imbalance_insert_ ()
+{
+    auto curr_ = this;
+
+    if ( curr_->m_right_->m_bf_ == curr_->m_bf_ )
+    {
+        curr_                 = curr_->rotate_left_ ();
+        curr_->m_bf_          = 0;
+        curr_->m_left_->m_bf_ = 0;
+    }
+    else
+    {
+        auto old_bf_ = curr_->m_right_->m_left_->m_bf_;
+        curr_->m_right_->rotate_right_ ();
+        curr_        = curr_->rotate_left_ ();
+        curr_->m_bf_ = 0;
+
+        if ( old_bf_ == -1 )
+        {
+            curr_->m_left_->m_bf_  = 0;
+            curr_->m_right_->m_bf_ = 1;
+        }
+        else if ( old_bf_ == 1 )
+        {
+            curr_->m_left_->m_bf_  = -1;
+            curr_->m_right_->m_bf_ = 0;
+        }
+        else if ( old_bf_ == 0 )
+        {
+            curr_->m_left_->m_bf_  = 0;
+            curr_->m_right_->m_bf_ = 0;
+        }
+        else
+            throw std::out_of_range ("Unexpected value of balance factor");
+    }
+    return curr_;
+}
+template <typename Val_>
+typename do_avl_tree_node_<Val_>::node_ptr_ do_avl_tree_node_<Val_>::m_fix_right_imbalance_erase_ ()
+{
+    auto curr_      = this;
+    auto rchild_bf_ = curr_->m_right_->m_bf_;
+
+    if ( rchild_bf_ == 1 )
+    {
+        curr_                 = curr_->rotate_left_ ();
+        curr_->m_bf_          = 0;
+        curr_->m_left_->m_bf_ = 0;
+    }
+    else if ( rchild_bf_ == 0 )
+    {
+        curr_                 = curr_->rotate_left_ ();
+        curr_->m_bf_          = -1;
+        curr_->m_left_->m_bf_ = 1;
+    }
+    else if ( rchild_bf_ == -1 )
+    {
+        auto old_bf_ = curr_->m_right_->m_left_->m_bf_;
+
+        curr_->m_right_->rotate_right_ ();
+        curr_        = curr_->rotate_left_ ();
+        curr_->m_bf_ = 0;
+
+        if ( old_bf_ == -1 )
+        {
+            curr_->m_left_->m_bf_  = 0;
+            curr_->m_right_->m_bf_ = 1;
+        }
+        else if ( old_bf_ == 1 )
+        {
+            curr_->m_left_->m_bf_  = -1;
+            curr_->m_right_->m_bf_ = 0;
+        }
+        else if ( old_bf_ == 0 )
+        {
+            curr_->m_left_->m_bf_  = 0;
+            curr_->m_right_->m_bf_ = 0;
+        }
+        else
+            throw std::out_of_range ("Unexpected value of balance factor");
+    }
+    else
+        throw std::out_of_range ("Unexpected value of balance factor");
+    return curr_;
+}
+
+template <typename Val_>
+typename do_avl_tree_node_<Val_>::node_ptr_ do_avl_tree_node_<Val_>::m_fix_left_imbalance_erase_ ()
+{
+    auto curr_      = this;
+    auto lchild_bf_ = curr_->m_left_->m_bf_;
+
+    if ( lchild_bf_ == -1 )
+    {
+        curr_                  = curr_->rotate_right_ ();
+        curr_->m_bf_           = 0;
+        curr_->m_right_->m_bf_ = 0;
+    }
+    else if ( lchild_bf_ == 0 )
+    {
+        curr_                  = curr_->rotate_right_ ();
+        curr_->m_bf_           = 1;
+        curr_->m_right_->m_bf_ = -1;
+    }
+    else if ( lchild_bf_ == 1 )
+    {
+        auto old_bf_ = curr_->m_left_->m_right_->m_bf_;
+
+        curr_->m_left_->rotate_left_ ();
+        curr_        = curr_->rotate_right_ ();
+        curr_->m_bf_ = 0;
+        if ( old_bf_ == -1 )
+        {
+            curr_->m_left_->m_bf_  = 0;
+            curr_->m_right_->m_bf_ = 1;
+        }
+        else if ( old_bf_ == 1 )
+        {
+            curr_->m_left_->m_bf_  = -1;
+            curr_->m_right_->m_bf_ = 0;
+        }
+        else if ( old_bf_ == 0 )
+        {
+            curr_->m_left_->m_bf_  = 0;
+            curr_->m_right_->m_bf_ = 0;
+        }
+        else
+            throw std::out_of_range ("Unexpected value of balance factor");
+    }
+    else
+        throw std::out_of_range ("Unexpected value of balance factor");
+
+    return curr_;
+}
+
+template <typename Val_>
+typename do_avl_tree_node_<Val_>::node_ptr_ do_avl_tree_node_<Val_>::rotate_left_ ()
+{
+    auto node_       = this;
+    auto parent_     = this->m_parent_;
+    auto rchild_ptr_ = node_->m_right_.release ();
+
+    node_->m_right_ = std::move (rchild_ptr_->m_left_);
+
+    if ( node_->m_right_ )
+        node_->m_right_->m_parent_ = node_;
+
+    rchild_ptr_->m_parent_ = parent_;
+    if ( node_->is_left_child_ () && parent_ )
+    {
+        rchild_ptr_->m_left_ = std::move (parent_->m_left_);
+        parent_->m_left_     = owning_ptr_ (rchild_ptr_);
+    }
+    else if ( parent_ )
+    {
+        rchild_ptr_->m_left_ = std::move (parent_->m_right_);
+        parent_->m_right_    = owning_ptr_ (rchild_ptr_);
+    }
+
+    node_->m_parent_ = rchild_ptr_;
+
+    /* update rchild's and node's sizes (the only sizes changed) */
+    rchild_ptr_->m_size_ = node_->m_size_;
+    node_->m_size_       = self_::size (node_->m_left ()) + self_::size (node_->m_right ()) + 1;
+
+    return rchild_ptr_;
+}
+
+template <typename Val_>
+typename do_avl_tree_node_<Val_>::node_ptr_ do_avl_tree_node_<Val_>::rotate_right_ ()
+{
+    auto node_       = this;
+    auto parent_     = this->m_parent_;
+    auto lchild_ptr_ = node_->m_left_.release ();
+
+    node_->m_left_ = std::move (lchild_ptr_->m_right_);
+
+    if ( node_->m_left_ )
+        node_->m_left_->m_parent_ = node_;
+
+    lchild_ptr_->m_parent_ = parent_;
+    if ( node_->is_left_child_ () && parent_ )
+    {
+        lchild_ptr_->m_right_ = std::move (parent_->m_left_);
+        parent_->m_left_      = owning_ptr_ (lchild_ptr_);
+    }
+    else if ( parent_ )
+    {
+
+        lchild_ptr_->m_right_ = std::move (parent_->m_right_);
+        parent_->m_right_     = owning_ptr_ (lchild_ptr_);
+    }
+
+    node_->m_parent_ = lchild_ptr_;
+
+    /* update rchild's and node's sizes (the only sizes changed) */
+    lchild_ptr_->m_size_ = node_->m_size_;
+    node_->m_size_       = self_::size (node_->m_left ()) + self_::size (node_->m_right ()) + 1;
+
+    return lchild_ptr_;
+}
+
 template <typename Key_, typename Comp_>
 typename dynamic_order_avl_tree_<Key_, Comp_>::value_type
 dynamic_order_avl_tree_<Key_, Comp_>::m_os_select_ (size_type i)
@@ -437,7 +796,7 @@ dynamic_order_avl_tree_<Key_, Comp_>::m_os_select_ (size_type i)
     auto curr_ = m_root_ ();
 
     /* The rank of node is the size of left subtree plus 1. */
-    size_t rank_ = base_node_::size (curr_->m_left ()) + 1;
+    size_t rank_ = node_::size (curr_->m_left ()) + 1;
 
     while ( rank_ != i )
     {
@@ -450,7 +809,7 @@ dynamic_order_avl_tree_<Key_, Comp_>::m_os_select_ (size_type i)
             /* Reduce i, cause we've already passed rank_ smallest nodes. */
             i -= rank_;
         }
-        rank_ = base_node_::size (curr_->m_left ()) + 1;
+        rank_ = node_::size (curr_->m_left ()) + 1;
     }
 
     return s_key_ (curr_);
@@ -465,12 +824,12 @@ dynamic_order_avl_tree_<Key_, Comp_>::m_get_rank_of_ (iterator pos_)
     auto node_ = pos_.m_node_;
 
     /* The rank of node is the size of left subtree plus 1. */
-    size_type rank_ = base_node_::size (node_->m_left ()) + 1;
+    size_type rank_ = node_::size (node_->m_left ()) + 1;
 
     while ( node_ != m_root_ () )
     {
         if ( !node_->is_left_child_ () )
-            rank_ += base_node_::size (node_->m_parent_->m_left ()) + 1;
+            rank_ += node_::size (node_->m_parent_->m_left ()) + 1;
         node_ = node_->m_parent_;
     }
 
@@ -479,11 +838,11 @@ dynamic_order_avl_tree_<Key_, Comp_>::m_get_rank_of_ (iterator pos_)
 
 template <typename Key_, typename Comp_>
 template <typename F>
-std::tuple<typename dynamic_order_avl_tree_<Key_, Comp_>::base_ptr_,
-           typename dynamic_order_avl_tree_<Key_, Comp_>::base_ptr_, bool>
+std::tuple<typename dynamic_order_avl_tree_<Key_, Comp_>::node_ptr_,
+           typename dynamic_order_avl_tree_<Key_, Comp_>::node_ptr_, bool>
 dynamic_order_avl_tree_<Key_, Comp_>::m_trav_bin_search_ (value_type key_, F step_)
 {
-    using res_ = std::tuple<base_ptr_, base_ptr_, bool>;
+    using res_ = std::tuple<node_ptr_, node_ptr_, bool>;
 
     auto prev_ = m_root_ ();
     auto curr_ = prev_;
@@ -510,7 +869,7 @@ dynamic_order_avl_tree_<Key_, Comp_>::m_trav_bin_search_ (value_type key_, F ste
 }
 
 template <typename Key_, typename Comp_>
-typename dynamic_order_avl_tree_<Key_, Comp_>::base_ptr_
+typename dynamic_order_avl_tree_<Key_, Comp_>::node_ptr_
 dynamic_order_avl_tree_<Key_, Comp_>::m_insert_node_ (owning_ptr_ to_insert_)
 {
     auto to_insert_ptr_ = to_insert_.get ();
@@ -527,11 +886,11 @@ dynamic_order_avl_tree_<Key_, Comp_>::m_insert_node_ (owning_ptr_ to_insert_)
 
     /* Find right position in the tree */
     auto [found, prev, prev_greater] =
-        m_trav_bin_search_ (s_key_ (to_insert_ptr_), [] (base_ptr_ &node_) { node_->m_size_++; });
+        m_trav_bin_search_ (s_key_ (to_insert_ptr_), [] (node_ptr_ &node_) { node_->m_size_++; });
 
     if ( found )
     {
-        m_trav_bin_search_ (s_key_ (to_insert_ptr_), [] (base_ptr_ &node_) { node_->m_size_--; });
+        m_trav_bin_search_ (s_key_ (to_insert_ptr_), [] (node_ptr_ &node_) { node_->m_size_--; });
         throw std::out_of_range ("Element already inserted");
     }
     to_insert_->m_parent_ = prev;
@@ -553,11 +912,11 @@ dynamic_order_avl_tree_<Key_, Comp_>::m_insert_node_ (owning_ptr_ to_insert_)
 }
 
 template <typename Key_, typename Comp_>
-typename dynamic_order_avl_tree_<Key_, Comp_>::base_ptr_
+typename dynamic_order_avl_tree_<Key_, Comp_>::node_ptr_
 dynamic_order_avl_tree_<Key_, Comp_>::m_erase_pos_impl_ (iterator pos_)
 {
     auto to_erase_    = pos_.m_node_;
-    base_ptr_ target_ = nullptr;
+    node_ptr_ target_ = nullptr;
 
     /* choose node's in-order successor if it has two children */
     if ( !to_erase_->m_left_ || !to_erase_->m_right_ )
@@ -598,7 +957,7 @@ dynamic_order_avl_tree_<Key_, Comp_>::m_erase_pos_impl_ (iterator pos_)
 }
 
 template <typename Key_, typename Comp_>
-void dynamic_order_avl_tree_<Key_, Comp_>::m_rebalance_after_insert_ (base_ptr_ node_)
+void dynamic_order_avl_tree_<Key_, Comp_>::m_rebalance_after_insert_ (node_ptr_ node_)
 {
 
     /*
@@ -672,7 +1031,7 @@ void dynamic_order_avl_tree_<Key_, Comp_>::m_rebalance_after_insert_ (base_ptr_ 
 }
 
 template <typename Key_, typename Comp_>
-void dynamic_order_avl_tree_<Key_, Comp_>::m_rebalance_for_erase_ (base_ptr_ node_)
+void dynamic_order_avl_tree_<Key_, Comp_>::m_rebalance_for_erase_ (node_ptr_ node_)
 {
 
     /*
@@ -737,7 +1096,7 @@ void dynamic_order_avl_tree_<Key_, Comp_>::m_rebalance_for_erase_ (base_ptr_ nod
 // Accessors.
 template <typename Key_, typename Comp_>
 typename dynamic_order_avl_tree_<Key_, Comp_>::iterator
-dynamic_order_avl_tree_<Key_, Comp_>::m_lower_bound_ (base_ptr_ x_, base_ptr_ y_,
+dynamic_order_avl_tree_<Key_, Comp_>::m_lower_bound_ (node_ptr_ x_, node_ptr_ y_,
                                                       const value_type &k_)
 {
     while ( x_ )
@@ -756,7 +1115,7 @@ dynamic_order_avl_tree_<Key_, Comp_>::m_lower_bound_ (base_ptr_ x_, base_ptr_ y_
 
 template <typename Key_, typename Comp_>
 typename dynamic_order_avl_tree_<Key_, Comp_>::iterator
-dynamic_order_avl_tree_<Key_, Comp_>::m_upper_bound_ (base_ptr_ x_, base_ptr_ y_,
+dynamic_order_avl_tree_<Key_, Comp_>::m_upper_bound_ (node_ptr_ x_, node_ptr_ y_,
                                                       const value_type &k_)
 {
     while ( x_ )

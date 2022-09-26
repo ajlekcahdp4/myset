@@ -13,7 +13,6 @@ set (MY_TIME_QUERIES_SOURCES
 add_executable(queries ${QUERIES_SOURCES})
 target_include_directories(queries PRIVATE ${MYSET_INCLUDE_DIR})
 target_link_libraries(queries ${GTEST_BOTH_LIBRARIES})
-target_link_libraries(queries myset)
 install (TARGETS queries DESTINATION ${DESTDIR})
 
 if (BASH_PROGRAM)
@@ -23,7 +22,6 @@ endif()
 add_executable(std_time_queries ${STD_TIME_QUERIES_SOURCES})
 add_executable(my_time_queries ${MY_TIME_QUERIES_SOURCES})
 target_include_directories(my_time_queries PRIVATE ${MYSET_INCLUDE_DIR})
-target_link_libraries(my_time_queries myset)
 
 
 install (TARGETS std_time_queries my_time_queries DESTINATION ${DESTDIR})

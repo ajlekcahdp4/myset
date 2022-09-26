@@ -14,6 +14,7 @@
 #include "avl_tree.hpp"
 namespace rethinking_stl
 {
+
 template <typename Key_, typename Compare_ = std::less<Key_>>
 using set = dynamic_order_avl_tree_<Key_, Compare_>;
 

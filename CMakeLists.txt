@@ -10,7 +10,7 @@ endif()
 add_compile_options(-Wall -Wextra)
 
 set (MYSET_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib)
-set (MYSET_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/include)
+set (MYSET_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 find_package(Threads REQUIRED)
 find_package(GTest REQUIRED)
@@ -33,5 +33,4 @@ set(DCMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 find_program (BASH_PROGRAM bash)
 
-add_subdirectory(lib)
 add_subdirectory(test)
